@@ -3,60 +3,156 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>我的投資筆記</title>
+<title>我的投資情報站</title>
 
 <style>
+* { box-sizing: border-box; }
+
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    background: #f4f6f8;
-    margin: 0;
-    padding: 20px;
+  margin: 0;
+  background: #f3f5f8;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #1c1c1e;
 }
+
 .container {
-    max-width: 800px;
-    margin: auto;
+  max-width: 900px;
+  margin: auto;
+  padding: 22px;
 }
+
+.header {
+  margin-bottom: 22px;
+}
+
 h1 {
-    margin-bottom: 5px;
+  font-size: 32px;
+  margin: 0 0 6px 0;
 }
+
 .subtitle {
-    color: #666;
-    margin-bottom: 25px;
+  color: #666;
+  font-size: 16px;
 }
+
+.demo {
+  background: #fff3cd;
+  color: #755900;
+  padding: 10px 14px;
+  border-radius: 10px;
+  margin-top: 15px;
+  font-size: 14px;
+}
+
 .card {
-    background: white;
-    padding: 20px;
-    border-radius: 16px;
-    margin-bottom: 15px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  background: white;
+  border-radius: 18px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.06);
 }
-input {
-    width: 100%;
-    box-sizing: border-box;
-    padding: 12px;
-    margin: 6px 0;
-    border: 1px solid #ddd;
-    border-radius: 10px;
-    font-size: 16px;
+
+.section-title {
+  font-size: 21px;
+  font-weight: 700;
+  margin-bottom: 15px;
 }
-button {
-    width: 100%;
-    padding: 13px;
-    margin-top: 10px;
-    border: none;
-    border-radius: 10px;
-    background: #007aff;
-    color: white;
-    font-size: 17px;
+
+.market-grid {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 10px;
 }
-table {
-    width: 100%;
-    border-collapse: collapse;
+
+.market-item {
+  background: #f7f7f8;
+  border-radius: 12px;
+  padding: 14px;
 }
-th, td {
-    padding: 10px;
-    border-bottom: 1px solid #eee;
-    text-align: left;
+
+.label {
+  color: #777;
+  font-size: 13px;
+  margin-bottom: 5px;
+}
+
+.value {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.stock-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.stock-name {
+  font-size: 23px;
+  font-weight: 750;
+}
+
+.code {
+  color: #777;
+  font-size: 14px;
+}
+
+.signal {
+  padding: 7px 12px;
+  border-radius: 20px;
+  font-weight: 700;
+}
+
+.green { background:#dcf6e5; color:#147a3d; }
+.yellow { background:#fff1c7; color:#8a6400; }
+.red { background:#ffe1e1; color:#b42318; }
+
+.data-row {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.data-box {
+  background:#f7f7f8;
+  padding:12px;
+  border-radius:12px;
+}
+
+.analysis {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid #eee;
+  line-height: 1.6;
+}
+
+.focus {
+  background: #1c1c1e;
+  color: white;
+}
+
+.focus .section-title {
+  color: white;
+}
+
+.focus p {
+  line-height: 1.7;
+  margin: 8px 0;
+}
+
+.footer {
+  text-align:center;
+  color:#999;
+  font-size:13px;
+  padding:10px;
+}
+
+@media(max-width:600px) {
+  .market-grid, .data-row {
+    grid-template-columns:1fr;
+  }
+  h1 { font-size:27px; }
 }
 </style>
 </head>
@@ -65,82 +161,154 @@ th, td {
 
 <div class="container">
 
-<h1>📈 我的投資筆記</h1>
-<div class="subtitle">先記錄，再決定。</div>
-
-<div class="card">
-<h2>新增股票</h2>
-
-<input id="stock" placeholder="股票名稱，例如：力積電">
-<input id="price" type="number" step="0.01" placeholder="買入價格">
-<input id="shares" type="number" placeholder="股數">
-
-<button onclick="addStock()">加入投資紀錄</button>
+<div class="header">
+  <h1>📊 我的投資情報站</h1>
+  <div class="subtitle">資料不是答案，整理之後才有判斷。</div>
+  <div class="demo">⚠️ V1 測試版｜目前為示範資料，尚未連接即時行情</div>
 </div>
 
 <div class="card">
-<h2>我的持股</h2>
+  <div class="section-title">🌏 今日市場</div>
 
-<table>
-<thead>
-<tr>
-<th>股票</th>
-<th>買入價</th>
-<th>股數</th>
-<th>投入金額</th>
-</tr>
-</thead>
+  <div class="market-grid">
+    <div class="market-item">
+      <div class="label">台股趨勢</div>
+      <div class="value">🟢 偏多</div>
+    </div>
 
-<tbody id="stockList">
-</tbody>
-</table>
+    <div class="market-item">
+      <div class="label">外資動向</div>
+      <div class="value">🟡 觀察</div>
+    </div>
 
+    <div class="market-item">
+      <div class="label">市場風險</div>
+      <div class="value">🟡 中等</div>
+    </div>
+  </div>
+</div>
+
+
+<div class="card">
+  <div class="stock-head">
+    <div>
+      <div class="stock-name">聯電</div>
+      <div class="code">2303</div>
+    </div>
+    <div class="signal green">🟢 偏多</div>
+  </div>
+
+  <div class="data-row">
+    <div class="data-box">
+      <div class="label">股價</div>
+      <div class="value">--</div>
+    </div>
+
+    <div class="data-box">
+      <div class="label">成交量</div>
+      <div class="value">--</div>
+    </div>
+
+    <div class="data-box">
+      <div class="label">法人</div>
+      <div class="value">觀察中</div>
+    </div>
+  </div>
+
+  <div class="analysis">
+    <strong>情報判讀：</strong><br>
+    觀察價格趨勢、成交量與法人是否形成一致方向。<br>
+    🎯 <strong>重點：</strong>不要只看一天漲跌，確認趨勢是否延續。
+  </div>
+</div>
+
+
+<div class="card">
+  <div class="stock-head">
+    <div>
+      <div class="stock-name">南亞科</div>
+      <div class="code">2408</div>
+    </div>
+    <div class="signal yellow">🟡 觀察</div>
+  </div>
+
+  <div class="data-row">
+    <div class="data-box">
+      <div class="label">股價</div>
+      <div class="value">--</div>
+    </div>
+
+    <div class="data-box">
+      <div class="label">DRAM / 成交量</div>
+      <div class="value">--</div>
+    </div>
+
+    <div class="data-box">
+      <div class="label">法人</div>
+      <div class="value">觀察中</div>
+    </div>
+  </div>
+
+  <div class="analysis">
+    <strong>情報判讀：</strong><br>
+    南亞科除了股價，也要注意記憶體報價與產業循環。<br>
+    🎯 <strong>重點：</strong>價格、量能、DRAM 景氣訊號是否同步。
+  </div>
+</div>
+
+
+<div class="card">
+  <div class="stock-head">
+    <div>
+      <div class="stock-name">元大台灣50</div>
+      <div class="code">0050</div>
+    </div>
+    <div class="signal green">🟢 偏多</div>
+  </div>
+
+  <div class="data-row">
+    <div class="data-box">
+      <div class="label">股價</div>
+      <div class="value">--</div>
+    </div>
+
+    <div class="data-box">
+      <div class="label">大盤趨勢</div>
+      <div class="value">觀察中</div>
+    </div>
+
+    <div class="data-box">
+      <div class="label">外資</div>
+      <div class="value">觀察中</div>
+    </div>
+  </div>
+
+  <div class="analysis">
+    <strong>情報判讀：</strong><br>
+    0050 作為整體市場基準，用來比較個股相對強弱。<br>
+    🎯 <strong>重點：</strong>聯電、南亞科能不能跑贏市場。
+  </div>
+</div>
+
+
+<div class="card focus">
+  <div class="section-title">🎯 今日情報結論</div>
+
+  <p>① <strong>聯電：</strong>觀察量價與法人是否持續偏多。</p>
+  <p>② <strong>南亞科：</strong>特別注意記憶體產業訊號。</p>
+  <p>③ <strong>0050：</strong>作為市場基準，判斷目前適合積極還是保守。</p>
+
+  <p style="margin-top:18px;">
+    <strong>今天最重要：</strong><br>
+    不預測明天漲跌，先找出值得注意的變化。
+  </p>
+</div>
+
+<div class="footer">
+我的投資情報站 V1
 </div>
 
 </div>
-
-<script>
-let stocks = JSON.parse(localStorage.getItem("stocks")) || [];
-
-function showStocks() {
-    const list = document.getElementById("stockList");
-    list.innerHTML = "";
-
-    stocks.forEach(item => {
-        const total = item.price * item.shares;
-
-        list.innerHTML += `
-        <tr>
-            <td>${item.stock}</td>
-            <td>${item.price}</td>
-            <td>${item.shares}</td>
-            <td>${total.toLocaleString()}</td>
-        </tr>`;
-    });
-}
-
-function addStock() {
-    const stock = document.getElementById("stock").value;
-    const price = Number(document.getElementById("price").value);
-    const shares = Number(document.getElementById("shares").value);
-
-    if (!stock || !price || !shares) {
-        alert("請把資料填完整");
-        return;
-    }
-
-    stocks.push({stock, price, shares});
-    localStorage.setItem("stocks", JSON.stringify(stocks));
-
-    document.getElementById("stock").value = "";
-    document.getElementById("price").value = "";
-    document.getElementById("shares").value = "";
-
-    showStocks();
-}
-
-showStocks();
-</script>
 
 </body>
 </html>
