@@ -215,9 +215,12 @@ h1 {
     </div>
 
     <div class="data-box">
-      <div class="label">法人</div>
-      <div class="value">觀察中</div>
-    </div>
+  <div class="label">漲跌幅</div>
+  <div class="value" id="change-2303">--</div>
+</div>
+      
+      
+    
   </div>
 
   <div class="analysis">
@@ -249,8 +252,9 @@ h1 {
     </div>
 
     <div class="data-box">
-      <div class="label">法人</div>
-      <div class="value">觀察中</div>
+      <div class="label">漲跌幅</div>
+<div class="value" id="change-2408">--</div>
+      
     </div>
   </div>
 
@@ -281,14 +285,16 @@ h1 {
     </div>
 
     <div class="data-box">
-      <div class="label">大盤趨勢</div>
-      <div class="value">觀察中</div>
+  <div class="label">成交量</div>
+  <div class="value" id="volume-0050">--</div>
+</div>
+      
     </div>
 
     <div class="data-box">
-      <div class="label">外資</div>
-      <div class="value">觀察中</div>
-    </div>
+  <div class="label">漲跌幅</div>
+  <div class="value" id="change-0050">--</div>
+</div>
   </div>
 
   <div class="analysis">
@@ -333,7 +339,26 @@ function formatVolume(value) {
 
   return n.toLocaleString() + " 股";
 }
+function showChange(code, stock) {
+  const price = Number(stock.price);
+  const change = Number(stock.change);
+  const previousClose = price - change;
+  const percent = (change / previousClose) * 100;
 
+  const el = document.getElementById("change-" + code);
+
+  if (!el || !Number.isFinite(percent)) return;
+
+  if (change > 0) {
+    el.textContent = "▲ " + percent.toFixed(2) + "%";
+    el.style.color = "#d32f2f";
+  } else if (change < 0) {
+    el.textContent = "▼ " + Math.abs(percent).toFixed(2) + "%";
+    el.style.color = "#16833b";
+  } else {
+    el.textContent = "— 0.00%";
+  }
+}
 async function loadStockData() {
   try {
     const response = await fetch("stocks.json?v=" + Date.now());
@@ -352,6 +377,12 @@ async function loadStockData() {
       formatVolume(s2408.volume);
 
     document.getElementById("price-0050").textContent = s0050.price;
+    document.getElementById("volume-0050").textContent =
+  formatVolume(s0050.volume);
+
+showChange("2303", s2303);
+showChange("2408", s2408);
+showChange("0050", s0050);
     document.getElementById("update-time").textContent = data.updated + "（台北）";
     console.log("股票資料更新時間：", data.updated);
 
