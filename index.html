@@ -164,7 +164,7 @@ h1 {
 <div class="header">
   <h1>📊 我的投資情報站</h1>
   <div class="subtitle">資料不是答案，整理之後才有判斷。</div>
-  <div class="demo">⚠️ V1 測試版｜目前為示範資料，尚未連接即時行情</div>
+  <div class="demo">📡 V2｜台股盤後資料｜資料來源：臺灣證券交易所｜更新時間：<span id="update-time">讀取中...</span></div>
 </div>
 
 <div class="card">
@@ -352,7 +352,7 @@ async function loadStockData() {
       formatVolume(s2408.volume);
 
     document.getElementById("price-0050").textContent = s0050.price;
-
+    document.getElementById("update-time").textContent = data.updated + "（台北）";
     console.log("股票資料更新時間：", data.updated);
 
   } catch (error) {
