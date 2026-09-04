@@ -201,12 +201,17 @@ h1 {
   <div class="data-row">
     <div class="data-box">
       <div class="label">股價</div>
-      <div class="value">--</div>
+      <div class="value" id="price-2303">--</div>
     </div>
 
     <div class="data-box">
       <div class="label">成交量</div>
-      <div class="value">--</div>
+      <div class="value" id="volume-2303">--</div>
+                             
+
+
+                             
+
     </div>
 
     <div class="data-box">
@@ -235,12 +240,12 @@ h1 {
   <div class="data-row">
     <div class="data-box">
       <div class="label">股價</div>
-      <div class="value">--</div>
+      <div class="value" id="price-2408">--</div>
     </div>
 
     <div class="data-box">
       <div class="label">DRAM / 成交量</div>
-      <div class="value">--</div>
+      <div class="value" id="volume-2408">--</div>
     </div>
 
     <div class="data-box">
@@ -269,7 +274,10 @@ h1 {
   <div class="data-row">
     <div class="data-box">
       <div class="label">股價</div>
-      <div class="value">--</div>
+      <div class="value" id="price-0050">--</div>
+
+
+        
     </div>
 
     <div class="data-box">
@@ -310,34 +318,49 @@ h1 {
 
 </div>
 <script>
-async function testTWSE() {
-  try {
-    const response = await fetch(
-      "https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL"
-    );
+function formatVolume(value) {
+  const n = Number(value);
 
+  if (!Number.isFinite(n)) return "--";
+
+  if (n >= 100000000) {
+    return (n / 100000000).toFixed(2) + " 億股";
+  }
+
+  if (n >= 10000) {
+    return (n / 10000).toFixed(1) + " 萬股";
+  }
+
+  return n.toLocaleString() + " 股";
+}
+
+async function loadStockData() {
+  try {
+    const response = await fetch("stocks.json?v=" + Date.now());
     const data = await response.json();
 
-    const stocks = ["2303", "2408", "0050"];
+    const s2303 = data.stocks["2303"];
+    const s2408 = data.stocks["2408"];
+    const s0050 = data.stocks["0050"];
 
-    const result = data.filter(item =>
-      stocks.includes(item.Code)
-    );
+    document.getElementById("price-2303").textContent = s2303.price;
+    document.getElementById("volume-2303").textContent =
+      formatVolume(s2303.volume);
 
-    console.log("TWSE TEST:", result);
+    document.getElementById("price-2408").textContent = s2408.price;
+    document.getElementById("volume-2408").textContent =
+      formatVolume(s2408.volume);
 
-    if (result.length > 0) {
-      alert("證交所連線成功！找到 " + result.length + " 筆股票資料。");
-    } else {
-      alert("已連到證交所，但沒有找到股票資料。");
-    }
+    document.getElementById("price-0050").textContent = s0050.price;
+
+    console.log("股票資料更新時間：", data.updated);
 
   } catch (error) {
-    alert("證交所連線失敗：" + error.message);
+    console.error("讀取 stocks.json 失敗：", error);
   }
 }
 
-testTWSE();
+loadStockData();
 </script>
 </body>
 </html>
