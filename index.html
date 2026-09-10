@@ -476,34 +476,43 @@ function showAnalysis(code, stock) {
   const el = document.getElementById("daily-summary");
   if (!el) return;
 
-  function getPercent(stock) {
-    const price = Number(stock.price);
-    const change = Number(stock.change);
-    const previousClose = price - change;
-
-    if (!Number.isFinite(price) ||
-        !Number.isFinite(change) ||
-        previousClose === 0) {
-      return 0;
+  const items = [
+    {
+      code: "2303",
+      name: "聯電",
+      stock: s2303
+    },
+    {
+      code: "2408",
+      name: "南亞科",
+      stock: s2408
+    },
+    {
+      code: "0050",
+      name: "0050",
+      stock: s0050
     }
+  ];
 
-    return (change / previousClose) * 100;
-  }
+  items.forEach(item => {
+    const result = getStockScore(item.stock);
 
-  function getSignalText(percent) {
-    if (percent >= 2) return "🟢 偏多";
-    if (percent <= -2) return "🔴 偏空";
-    return "🟡 觀察";
-  }
+    item.score = result.score;
+    item.percent = result.percent;
 
-  const p2303 = getPercent(s2303);
-  const p2408 = getPercent(s2408);
-  const p0050 = getPercent(s0050);
+    if (item.score >= 2) {
+      item.signal = "🟢 偏多";
+    } else if (item.score <= -2) {
+      item.signal = "🔴 偏空";
+    } else {
+      item.signal = "🟡 觀察";
+    }
+  });
 
-  const signals = [p2303, p2408, p0050];
+  items.sort((a, b) => b.score - a.score);
 
-  const bullish = signals.filter(p => p >= 2).length;
-  const bearish = signals.filter(p => p <= -2).length;
+  const bullish = items.filter(item => item.score >= 2).length;
+  const bearish = items.filter(item => item.score <= -2).length;
 
   let marketText = "市場訊號分歧，維持觀察。";
 
@@ -513,15 +522,28 @@ function showAnalysis(code, stock) {
     marketText = "整體訊號偏弱，短線宜提高風險意識。";
   }
 
+  const medals = ["🥇", "🥈", "🥉"];
+
+  let rankingHtml = "";
+
+  items.forEach((item, index) => {
+    const scoreText = item.score > 0 ? "+" + item.score : item.score;
+
+    rankingHtml +=
+      "<p>" +
+      medals[index] + " <strong>" + item.name + "：</strong>" +
+      item.signal + "｜" +
+      scoreText + " 分｜" +
+      item.percent.toFixed(2) + "%" +
+      "</p>";
+  });
+
   el.innerHTML =
     "<p><strong>今日市場：</strong>" + marketText + "</p>" +
-    "<p>① <strong>聯電：</strong>" +
-    getSignalText(p2303) + "｜" + p2303.toFixed(2) + "%</p>" +
-    "<p>② <strong>南亞科：</strong>" +
-    getSignalText(p2408) + "｜" + p2408.toFixed(2) + "%</p>" +
-    "<p>③ <strong>0050：</strong>" +
-    getSignalText(p0050) + "｜" + p0050.toFixed(2) + "%</p>";
+    rankingHtml;
 }
+
+
   async function loadStockData() {
   try {
     const response = await fetch("stocks.json?v=" + Date.now());
