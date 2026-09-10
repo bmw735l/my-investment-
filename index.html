@@ -238,7 +238,7 @@ h1 {
     <div class="value" id="dealer-2303">--</div>
   </div>
 </div>
-  <div class="analysis">
+  <div class="analysis" id="analysis-2303">
     <strong>情報判讀：</strong><br>
     觀察價格趨勢、成交量與法人是否形成一致方向。<br>
     🎯 <strong>重點：</strong>不要只看一天漲跌，確認趨勢是否延續。
@@ -406,6 +406,38 @@ function showInstitution(id, value) {
     el.textContent = "0 股";
   }
 }
+  function showAnalysis(code, stock) {
+  const price = Number(stock.price);
+  const change = Number(stock.change);
+  const previousClose = price - change;
+  const percent = (change / previousClose) * 100;
+
+  const foreign = Number(String(stock.foreign).replace(/,/g, ""));
+  const trust = Number(String(stock.trust).replace(/,/g, ""));
+
+  let message = "";
+
+  if (percent >= 2 && foreign > 0 && trust > 0) {
+    message =
+      "股價上漲 " + percent.toFixed(2) +
+      "%，外資與投信同步買超，價格與法人籌碼方向一致。" +
+      "<br>🎯 <strong>重點：</strong>短線偏多，觀察法人買盤是否延續。";
+
+  } else if (percent <= -2 && foreign < 0 && trust < 0) {
+    message =
+      "股價下跌 " + Math.abs(percent).toFixed(2) +
+      "%，外資與投信同步賣超，價格與法人籌碼方向偏弱。" +
+      "<br>🎯 <strong>重點：</strong>短線偏空，注意法人賣壓是否持續。";
+
+  } else {
+    message =
+      "股價與法人籌碼尚未形成明確一致方向。" +
+      "<br>🎯 <strong>重點：</strong>維持觀察，等待價格與法人訊號確認。";
+  }
+
+  const el = document.getElementById("analysis-" + code);
+  if (el) el.innerHTML = message;
+}
   async function loadStockData() {
   try {
     const response = await fetch("stocks.json?v=" + Date.now());
@@ -430,6 +462,7 @@ showInstitution("dealer-2303", s2303.dealer);
   formatVolume(s0050.volume);
 
 showChange("2303", s2303);
+showAnalysis("2303", s2303);
 showChange("2408", s2408);
 showChange("0050", s0050);
     document.getElementById("update-time").textContent = data.updated + "（台北）";
