@@ -32,25 +32,63 @@ jobs:
 
           with urllib.request.urlopen(req, timeout=30) as response:
               data = json.loads(response.read().decode("utf-8"))
+          t86_url = "https://www.twse.com.tw/rwd/zh/fund/T86?selectType=ALL&response=json"
 
+          t86_req = urllib.request.Request(
+              t86_url,
+              headers={"User-Agent": "Mozilla/5.0"}
+          )
+
+          with urllib.request.urlopen(t86_req, timeout=30) as response:
+              t86 = json.loads(response.read().decode("utf-8"))
           wanted = {
               "2303": "聯電",
               "2408": "南亞科",
               "0050": "元大台灣50"
           }
+fields = t86.get("fields", [])
+rows = t86.get("data", [])
 
-          result = {}
+def find_field(keyword):
+    for i, field in enumerate(fields):
+        if keyword in field:
+            return i
+    return None
 
-          for item in data:
-              code = item.get("Code")
+code_idx = find_field("證券代號")
+foreign_idx = find_field("外陸資買賣超股數")
+trust_idx = find_field("投信買賣超股數")
+dealer_idx = find_field("自營商買賣超股數")
 
-              if code in wanted:
-                  result[code] = {
-                      "name": wanted[code],
-                      "price": item.get("ClosingPrice", "--"),
-                      "change": item.get("Change", "--"),
-                      "volume": item.get("TradeVolume", "--")
-                  }
+institutional = {}
+
+for row in rows:
+    if code_idx is None:
+        continue
+
+    code = row[code_idx]
+
+    if code in wanted:
+        institutional[code] = {
+            "foreign": row[foreign_idx] if foreign_idx is not None else "--",
+            "trust": row[trust_idx] if trust_idx is not None else "--",
+            "dealer": row[dealer_idx] if dealer_idx is not None else "--"
+        }
+result = {}
+
+for item in data:
+    code = item.get("Code")
+
+    if code in wanted:
+        result[code] = {
+            "name": wanted[code],
+            "price": item.get("ClosingPrice", "--"),
+            "change": item.get("Change", "--"),
+            "volume": item.get("TradeVolume", "--"),
+            "foreign": institutional.get(code, {}).get("foreign", "--"),
+            "trust": institutional.get(code, {}).get("trust", "--"),
+            "dealer": institutional.get(code, {}).get("dealer", "--")
+        }
 
           taipei = timezone(timedelta(hours=8))
 
