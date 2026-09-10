@@ -195,7 +195,7 @@ h1 {
       <div class="stock-name">聯電</div>
       <div class="code">2303</div>
     </div>
-    <div class="signal green">🟢 偏多</div>
+    <div class="signal yellow" id="signal-2303">🟡 觀察</div>
   </div>
 
   <div class="data-row">
@@ -237,7 +237,7 @@ h1 {
       <div class="stock-name">南亞科</div>
       <div class="code">2408</div>
     </div>
-    <div class="signal yellow">🟡 觀察</div>
+    <div class="signal yellow" id="signal-2408">🟡 觀察</div>
   </div>
 
   <div class="data-row">
@@ -272,7 +272,7 @@ h1 {
       <div class="stock-name">元大台灣50</div>
       <div class="code">0050</div>
     </div>
-    <div class="signal green">🟢 偏多</div>
+    <div class="signal yellow" id="signal-0050">🟡 觀察</div>
   </div>
 
   <div class="data-row">
@@ -346,9 +346,20 @@ function showChange(code, stock) {
   const percent = (change / previousClose) * 100;
 
   const el = document.getElementById("change-" + code);
-
+  const signal = document.getElementById("signal-" + code);
   if (!el || !Number.isFinite(percent)) return;
-
+if (signal) {
+  if (percent >= 2) {
+    signal.textContent = "🟢 偏多";
+    signal.className = "signal green";
+  } else if (percent <= -2) {
+    signal.textContent = "🔴 偏空";
+    signal.className = "signal red";
+  } else {
+    signal.textContent = "🟡 觀察";
+    signal.className = "signal yellow";
+  }
+}  
   if (change > 0) {
     el.textContent = "▲ " + percent.toFixed(2) + "%";
     el.style.color = "#d32f2f";
