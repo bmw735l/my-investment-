@@ -325,7 +325,12 @@ h1 {
   <div id="daily-summary">
     <p>正在整理今日市場情報...</p>
   </div>
-
+  
+<div id="industry-ranking" style="margin-top:20px;">
+  <strong>🔥 族群強弱排名</strong>
+  <p>正在整理族群資料...</p>
+</div>
+  
   <p style="margin-top:18px;">
     <strong>今天最重要：</strong><br>
     不預測明天漲跌，先找出值得注意的變化。
@@ -338,7 +343,58 @@ h1 {
 
 </div>
 <script>
-function formatVolume(value) {
+const stockConfig = {
+  "2303": {
+    name: "聯電",
+    industry: "半導體",
+    group: "晶圓代工"
+  },
+
+  "2408": {
+    name: "南亞科",
+    industry: "半導體",
+    group: "記憶體"
+  },
+
+  "0050": {
+    name: "元大台灣50",
+    industry: "ETF",
+    group: "大型權值"
+  }
+};
+  function getIndustryRanking(stockData) {
+  const groups = {};
+
+  Object.keys(stockConfig).forEach(code => {
+    const config = stockConfig[code];
+    const stock = stockData[code];
+
+    if (!stock) return;
+
+    const result = getStockScore(stock);
+    const groupName = config.group;
+
+    if (!groups[groupName]) {
+      groups[groupName] = {
+        name: groupName,
+        industry: config.industry,
+        totalScore: 0,
+        count: 0
+      };
+    }
+
+    groups[groupName].totalScore += result.score;
+    groups[groupName].count += 1;
+  });
+
+  return Object.values(groups)
+    .map(group => ({
+      ...group,
+      score: group.totalScore / group.count
+    }))
+    .sort((a, b) => b.score - a.score);
+}
+  function formatVolume(value) {
   const n = Number(value);
 
   if (!Number.isFinite(n)) return "--";
@@ -542,7 +598,33 @@ function showAnalysis(code, stock) {
     "<p><strong>今日市場：</strong>" + marketText + "</p>" +
     rankingHtml;
 }
+function showIndustryRanking(stockData) {
+  const el = document.getElementById("industry-ranking");
+  if (!el) return;
 
+  const ranking = getIndustryRanking(stockData);
+  const medals = ["🥇", "🥈", "🥉"];
+
+  let html = "<strong>🔥 族群強弱排名</strong>";
+
+  ranking.forEach((item, index) => {
+    const scoreText = item.score > 0 ? "+" + item.score : item.score;
+
+    let signal = "🟡 觀察";
+    if (item.score >= 2) signal = "🟢 偏強";
+    else if (item.score <= -2) signal = "🔴 偏弱";
+
+    html +=
+      "<p>" +
+      (medals[index] || "•") + " " +
+      "<strong>" + item.name + "：</strong>" +
+      signal + "｜" +
+      scoreText + " 分" +
+      "</p>";
+  });
+
+  el.innerHTML = html;
+}
 
   async function loadStockData() {
   try {
@@ -576,6 +658,7 @@ showAnalysis("2408", s2408);
 showChange("0050", s0050);
 showAnalysis("0050", s0050);
 showDailySummary(s2303, s2408, s0050);
+showIndustryRanking(data.stocks);
     document.getElementById("update-time").textContent = data.updated + "（台北）";
     console.log("股票資料更新時間：", data.updated);
 
