@@ -322,9 +322,9 @@ h1 {
 <div class="card focus">
   <div class="section-title">🎯 今日情報結論</div>
 
-  <p>① <strong>聯電：</strong>觀察量價與法人是否持續偏多。</p>
-  <p>② <strong>南亞科：</strong>特別注意記憶體產業訊號。</p>
-  <p>③ <strong>0050：</strong>作為市場基準，判斷目前適合積極還是保守。</p>
+  <div id="daily-summary">
+    <p>正在整理今日市場情報...</p>
+  </div>
 
   <p style="margin-top:18px;">
     <strong>今天最重要：</strong><br>
@@ -437,6 +437,56 @@ function showInstitution(id, value) {
   const el = document.getElementById("analysis-" + code);
   if (el) el.innerHTML = message;
 }
+  function showDailySummary(s2303, s2408, s0050) {
+  const el = document.getElementById("daily-summary");
+  if (!el) return;
+
+  function getPercent(stock) {
+    const price = Number(stock.price);
+    const change = Number(stock.change);
+    const previousClose = price - change;
+
+    if (!Number.isFinite(price) ||
+        !Number.isFinite(change) ||
+        previousClose === 0) {
+      return 0;
+    }
+
+    return (change / previousClose) * 100;
+  }
+
+  function getSignalText(percent) {
+    if (percent >= 2) return "🟢 偏多";
+    if (percent <= -2) return "🔴 偏空";
+    return "🟡 觀察";
+  }
+
+  const p2303 = getPercent(s2303);
+  const p2408 = getPercent(s2408);
+  const p0050 = getPercent(s0050);
+
+  const signals = [p2303, p2408, p0050];
+
+  const bullish = signals.filter(p => p >= 2).length;
+  const bearish = signals.filter(p => p <= -2).length;
+
+  let marketText = "市場訊號分歧，維持觀察。";
+
+  if (bullish >= 2) {
+    marketText = "整體訊號偏多，但仍需留意個股強弱差異。";
+  } else if (bearish >= 2) {
+    marketText = "整體訊號偏弱，短線宜提高風險意識。";
+  }
+
+  el.innerHTML =
+    "<p><strong>今日市場：</strong>" + marketText + "</p>" +
+    "<p>① <strong>聯電：</strong>" +
+    getSignalText(p2303) + "｜" + p2303.toFixed(2) + "%</p>" +
+    "<p>② <strong>南亞科：</strong>" +
+    getSignalText(p2408) + "｜" + p2408.toFixed(2) + "%</p>" +
+    "<p>③ <strong>0050：</strong>" +
+    getSignalText(p0050) + "｜" + p0050.toFixed(2) + "%</p>";
+}
   async function loadStockData() {
   try {
     const response = await fetch("stocks.json?v=" + Date.now());
@@ -468,6 +518,7 @@ showAnalysis("2408", s2408);
     
 showChange("0050", s0050);
 showAnalysis("0050", s0050);
+showDailySummary(s2303, s2408, s0050);
     document.getElementById("update-time").textContent = data.updated + "（台北）";
     console.log("股票資料更新時間：", data.updated);
 
