@@ -222,7 +222,22 @@ h1 {
       
     
   </div>
+  <div class="data-row">
+  <div class="data-box">
+    <div class="label">外資</div>
+    <div class="value" id="foreign-2303">--</div>
+  </div>
 
+  <div class="data-box">
+    <div class="label">投信</div>
+    <div class="value" id="trust-2303">--</div>
+  </div>
+
+  <div class="data-box">
+    <div class="label">自營商</div>
+    <div class="value" id="dealer-2303">--</div>
+  </div>
+</div>
   <div class="analysis">
     <strong>情報判讀：</strong><br>
     觀察價格趨勢、成交量與法人是否形成一致方向。<br>
@@ -370,7 +385,28 @@ if (signal) {
     el.textContent = "— 0.00%";
   }
 }
-async function loadStockData() {
+function showInstitution(id, value) {
+  const el = document.getElementById(id);
+  if (!el) return;
+
+  const n = Number(String(value).replace(/,/g, ""));
+
+  if (!Number.isFinite(n)) {
+    el.textContent = "--";
+    return;
+  }
+
+  if (n > 0) {
+    el.textContent = "買超 " + (n / 10000).toFixed(1) + " 萬股";
+    el.style.color = "#d32f2f";
+  } else if (n < 0) {
+    el.textContent = "賣超 " + Math.abs(n / 10000).toFixed(1) + " 萬股";
+    el.style.color = "#16833b";
+  } else {
+    el.textContent = "0 股";
+  }
+}
+  async function loadStockData() {
   try {
     const response = await fetch("stocks.json?v=" + Date.now());
     const data = await response.json();
@@ -382,7 +418,9 @@ async function loadStockData() {
     document.getElementById("price-2303").textContent = s2303.price;
     document.getElementById("volume-2303").textContent =
       formatVolume(s2303.volume);
-
+showInstitution("foreign-2303", s2303.foreign);
+showInstitution("trust-2303", s2303.trust);
+showInstitution("dealer-2303", s2303.dealer);
     document.getElementById("price-2408").textContent = s2408.price;
     document.getElementById("volume-2408").textContent =
       formatVolume(s2408.volume);
