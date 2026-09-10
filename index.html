@@ -363,10 +363,12 @@ function showChange(code, stock) {
   const signal = document.getElementById("signal-" + code);
   if (!el || !Number.isFinite(percent)) return;
 if (signal) {
-  if (percent >= 2) {
+  const score = getStockScore(stock).score;
+
+  if (score >= 2) {
     signal.textContent = "🟢 偏多";
     signal.className = "signal green";
-  } else if (percent <= -2) {
+  } else if (score <= -2) {
     signal.textContent = "🔴 偏空";
     signal.className = "signal red";
   } else {
@@ -405,7 +407,7 @@ function showInstitution(id, value) {
     el.textContent = "0 股";
   }
 }
-  function showAnalysis(code, stock) {
+  function getStockScore(stock) {
   const price = Number(stock.price);
   const change = Number(stock.change);
   const previousClose = price - change;
@@ -414,24 +416,57 @@ function showInstitution(id, value) {
   const foreign = Number(String(stock.foreign).replace(/,/g, ""));
   const trust = Number(String(stock.trust).replace(/,/g, ""));
 
+  let score = 0;
+
+  if (percent >= 2) score += 2;
+  else if (percent <= -2) score -= 2;
+
+  if (foreign > 0) score += 1;
+  else if (foreign < 0) score -= 1;
+
+  if (trust > 0) score += 1;
+  else if (trust < 0) score -= 1;
+
+  return {
+    score,
+    percent,
+    foreign,
+    trust
+  };
+}
+function showAnalysis(code, stock) {
+  const result = getStockScore(stock);
+
+  const score = result.score;
+  const percent = result.percent;
+  const foreign = result.foreign;
+  const trust = result.trust;
+
   let message = "";
 
-  if (percent >= 2 && foreign > 0 && trust > 0) {
+  if (score >= 2) {
     message =
-      "股價上漲 " + percent.toFixed(2) +
-      "%，外資與投信同步買超，價格與法人籌碼方向一致。" +
-      "<br>🎯 <strong>重點：</strong>短線偏多，觀察法人買盤是否延續。";
+      "綜合評分 +" + score + " 分。" +
+      "股價 " + (percent >= 0 ? "上漲 " : "下跌 ") +
+      Math.abs(percent).toFixed(2) + "%，" +
+      "外資" + (foreign > 0 ? "買超" : foreign < 0 ? "賣超" : "持平") + "，" +
+      "投信" + (trust > 0 ? "買超" : trust < 0 ? "賣超" : "持平") + "。" +
+      "<br>🎯 <strong>重點：</strong>整體訊號偏多，觀察正向籌碼是否延續。";
 
-  } else if (percent <= -2 && foreign < 0 && trust < 0) {
+  } else if (score <= -2) {
     message =
-      "股價下跌 " + Math.abs(percent).toFixed(2) +
-      "%，外資與投信同步賣超，價格與法人籌碼方向偏弱。" +
-      "<br>🎯 <strong>重點：</strong>短線偏空，注意法人賣壓是否持續。";
+      "綜合評分 " + score + " 分。" +
+      "股價 " + (percent >= 0 ? "上漲 " : "下跌 ") +
+      Math.abs(percent).toFixed(2) + "%，" +
+      "外資" + (foreign > 0 ? "買超" : foreign < 0 ? "賣超" : "持平") + "，" +
+      "投信" + (trust > 0 ? "買超" : trust < 0 ? "賣超" : "持平") + "。" +
+      "<br>🎯 <strong>重點：</strong>整體訊號偏弱，注意法人賣壓與價格續弱風險。";
 
   } else {
     message =
-      "股價與法人籌碼尚未形成明確一致方向。" +
-      "<br>🎯 <strong>重點：</strong>維持觀察，等待價格與法人訊號確認。";
+      "綜合評分 " + score + " 分。" +
+      "價格與法人訊號尚未形成明確方向。" +
+      "<br>🎯 <strong>重點：</strong>維持觀察，等待價格與籌碼進一步確認。";
   }
 
   const el = document.getElementById("analysis-" + code);
