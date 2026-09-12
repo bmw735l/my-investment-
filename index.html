@@ -330,6 +330,11 @@ h1 {
   <strong>🔥 族群強弱排名</strong>
   <p>正在整理族群資料...</p>
 </div>
+
+<div id="industry-rotation" style="margin-top:20px;">
+  <strong>🔄 產業輪動趨勢</strong>
+  <p>正在累積歷史資料...</p>
+</div>
   
   <p style="margin-top:18px;">
     <strong>今天最重要：</strong><br>
@@ -622,6 +627,7 @@ function showAnalysis(code, stock) {
     "<p><strong>今日市場：</strong>" + marketText + "</p>" +
     rankingHtml;
 }
+  
 function showIndustryRanking(stockData) {
   const el = document.getElementById("industry-ranking");
   if (!el) return;
@@ -649,7 +655,35 @@ function showIndustryRanking(stockData) {
 
   el.innerHTML = html;
 }
+  
+async function showIndustryRotation() {
+  const el = document.getElementById("industry-rotation");
+  if (!el) return;
 
+  try {
+    const response = await fetch("history.json?v=" + Date.now());
+    const history = await response.json();
+
+    const dates = Object.keys(history).sort();
+
+    if (dates.length < 2) {
+      el.innerHTML =
+        "<strong>🔄 產業輪動趨勢</strong>" +
+        "<p>歷史資料累積中，目前 " +
+        dates.length +
+        " 個交易日。</p>" +
+        "<p>累積 2 個交易日後開始判斷族群轉強／轉弱。</p>";
+      return;
+    }
+
+  } catch (error) {
+    console.error("讀取 history.json 失敗：", error);
+
+    el.innerHTML =
+      "<strong>🔄 產業輪動趨勢</strong>" +
+      "<p>歷史資料暫時無法讀取。</p>";
+  }
+}
   async function loadStockData() {
   try {
     const response = await fetch("stocks.json?v=" + Date.now());
@@ -683,6 +717,7 @@ showChange("0050", s0050);
 showAnalysis("0050", s0050);
 showDailySummary(s2303, s2408, s0050);
 showIndustryRanking(data.stocks);
+showIndustryRotation();
     document.getElementById("update-time").textContent = data.updated + "（台北）";
     console.log("股票資料更新時間：", data.updated);
 
