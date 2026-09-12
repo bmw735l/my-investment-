@@ -664,7 +664,27 @@ async function showIndustryRotation() {
     const response = await fetch("history.json?v=" + Date.now());
     const history = await response.json();
     const dates = Object.keys(history).sort();
+    
+// TEMP TEST: simulate a second day
+if (dates.length === 1) {
+  const testDate = "TEST-DAY";
 
+  history[testDate] = JSON.parse(
+    JSON.stringify(history[dates[0]])
+  );
+
+  history[testDate].stocks["2303"].change = "3.0000";
+  history[testDate].stocks["2330"].change = "20.0000";
+
+  history[testDate].stocks["2408"].change = "5.0000";
+  history[testDate].stocks["2344"].change = "2.0000";
+
+  history[testDate].stocks["2454"].change = "0.0000";
+  history[testDate].stocks["2317"].change = "8.0000";
+
+  dates.push(testDate);
+}
+    
     if (dates.length < 2) {
       el.innerHTML =
         "<strong>🔄 產業輪動趨勢</strong>" +
