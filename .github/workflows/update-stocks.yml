@@ -110,34 +110,34 @@ jobs:
               )
 
           # Save daily history
-today = datetime.now(taipei).strftime("%Y-%m-%d")
+          today = datetime.now(taipei).strftime("%Y-%m-%d")
 
-try:
-    with open("history.json", "r", encoding="utf-8") as f:
-        history = json.load(f)
-except (FileNotFoundError, json.JSONDecodeError):
-    history = {}
+          try:
+              with open("history.json", "r", encoding="utf-8") as f:
+                  history = json.load(f)
+          except (FileNotFoundError, json.JSONDecodeError):
+              history = {}
 
-history[today] = {
-    "updated": output["updated"],
-    "stocks": result
-}
+          history[today] = {
+              "updated": output["updated"],
+              "stocks": result
+          }
 
-# Keep the latest 60 trading/calendar entries
-if len(history) > 60:
-    old_dates = sorted(history.keys())[:-60]
-    for old_date in old_dates:
-        del history[old_date]
+          # Keep the latest 60 trading/calendar entries
+          if len(history) > 60:
+              old_dates = sorted(history.keys())[:-60]
+              for old_date in old_dates:
+                  del history[old_date]
 
-with open("history.json", "w", encoding="utf-8") as f:
-    json.dump(
-        history,
-        f,
-        ensure_ascii=False,
-        indent=2
-    )
-print(json.dumps(output, ensure_ascii=False, indent=2))
-PY
+          with open("history.json", "w", encoding="utf-8") as f:
+              json.dump(
+                  history,
+                  f,
+                  ensure_ascii=False,
+                  indent=2
+              )
+          print(json.dumps(output, ensure_ascii=False, indent=2))
+          PY
 
       - name: Save stock data
         run: |
