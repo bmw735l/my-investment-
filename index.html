@@ -663,7 +663,6 @@ async function showIndustryRotation() {
   try {
     const response = await fetch("history.json?v=" + Date.now());
     const history = await response.json();
-
     const dates = Object.keys(history).sort();
 
     if (dates.length < 2) {
@@ -675,6 +674,50 @@ async function showIndustryRotation() {
         "<p>累積 2 個交易日後開始判斷族群轉強／轉弱。</p>";
       return;
     }
+
+    const previousDate = dates[dates.length - 2];
+    const currentDate = dates[dates.length - 1];
+
+    const previousStocks = history[previousDate].stocks;
+    const currentStocks = history[currentDate].stocks;
+
+    const previousRanking = getIndustryRanking(previousStocks);
+    const currentRanking = getIndustryRanking(currentStocks);
+
+    const previousMap = {};
+    previousRanking.forEach(item => {
+      previousMap[item.name] = item.score;
+    });
+
+    let html =
+      "<strong>🔄 產業輪動趨勢</strong>" +
+      "<p>" + previousDate + " → " + currentDate + "</p>";
+
+    currentRanking.forEach(item => {
+      const oldScore = previousMap[item.name];
+
+      if (oldScore === undefined) return;
+
+      const diff = item.score - oldScore;
+
+      let trend = "➡️ 持平";
+
+      if (diff >= 1) {
+        trend = "↗️ 轉強";
+      } else if (diff <= -1) {
+        trend = "↘️ 轉弱";
+      }
+
+      const diffText = diff > 0 ? "+" + diff : diff;
+
+      html +=
+        "<p><strong>" + item.name + "：</strong>" +
+        trend +
+        "｜" + oldScore + " → " + item.score +
+        "（" + diffText + "）</p>";
+    });
+
+    el.innerHTML = html;
 
   } catch (error) {
     console.error("讀取 history.json 失敗：", error);
