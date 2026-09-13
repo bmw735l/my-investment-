@@ -752,7 +752,43 @@ function showAttentionSignals(stockData) {
     const score = result.score;
 
     const institutionalNet = foreign + trust;
+    const sameGroupStocks = Object.keys(stockConfig)
+  .filter(c =>
+    c !== code &&
+    stockConfig[c].group === config.group &&
+    stockData[c]
+  );
 
+    const groupScores = sameGroupStocks.map(c =>
+      getStockScore(stockData[c]).score
+);
+
+    const groupAverage =
+  groupScores.length > 0
+    ? groupScores.reduce((sum, value) => sum + value, 0) / groupScores.length
+    : 0;
+    if (sameGroupStocks.length > 0) {
+  const relativeGap = score - groupAverage;
+
+  if (relativeGap >= 2) {
+    messages.push(
+      "<p>👀 <strong>" + config.name + "：</strong>" +
+      "個股評分 " + score.toFixed(1) +
+      "，明顯強於同族平均 " + groupAverage.toFixed(1) + "。" +
+      "<br>原因：個股強弱與族群不同步。" +
+      "<br>下一步看：個股能否帶動族群，或只是短線獨強。</p>"
+    );
+
+  } else if (relativeGap <= -2) {
+    messages.push(
+      "<p>👀 <strong>" + config.name + "：</strong>" +
+      "個股評分 " + score.toFixed(1) +
+      "，明顯弱於同族平均 " + groupAverage.toFixed(1) + "。" +
+      "<br>原因：個股表現落後同族。" +
+      "<br>下一步看：個股是否補強，或弱勢持續擴大。</p>"
+    );
+  }
+}         
     if (percent < 0 && institutionalNet > 0) {
   messages.push(
     "<p>👀 <strong>" + config.name + "：</strong>" +
