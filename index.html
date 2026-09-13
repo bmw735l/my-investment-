@@ -336,6 +336,11 @@ h1 {
   <p>正在累積歷史資料...</p>
 </div>
   
+<div id="attention-signals" style="margin-top:20px;">
+  <strong>⚠️ 今日值得注意</strong>
+  <p>正在整理值得注意的變化...</p>
+</div>  
+  
   <p style="margin-top:18px;">
     <strong>今天最重要：</strong><br>
     不預測明天漲跌，先找出值得注意的變化。
@@ -727,6 +732,67 @@ async function showIndustryRotation() {
       "<p>歷史資料暫時無法讀取。</p>";
   }
 }
+function showAttentionSignals(stockData) {
+  const el = document.getElementById("attention-signals");
+  if (!el) return;
+
+  const messages = [];
+
+  Object.keys(stockConfig).forEach(code => {
+    const stock = stockData[code];
+    const config = stockConfig[code];
+
+    if (!stock || !config) return;
+
+    const result = getStockScore(stock);
+
+    const percent = result.percent;
+    const foreign = result.foreign;
+    const trust = result.trust;
+    const score = result.score;
+
+    const institutionalNet = foreign + trust;
+
+    if (percent < 0 && institutionalNet > 0) {
+      messages.push(
+        "<p>⚠️ <strong>" + config.name + "：</strong>" +
+        "股價下跌 " + Math.abs(percent).toFixed(2) +
+        "%，但外資＋投信合計買超，出現價籌背離，值得持續觀察。</p>"
+      );
+
+    } else if (percent > 0 && institutionalNet < 0) {
+      messages.push(
+        "<p>⚠️ <strong>" + config.name + "：</strong>" +
+        "股價上漲 " + percent.toFixed(2) +
+        "%，但外資＋投信合計賣超，留意上漲動能是否能延續。</p>"
+      );
+    }
+
+    if (score >= 3) {
+      messages.push(
+        "<p>🔥 <strong>" + config.name + "：</strong>" +
+        "綜合評分 +" + score +
+        " 分，屬於目前較強訊號。</p>"
+      );
+    } else if (score <= -3) {
+      messages.push(
+        "<p>🔻 <strong>" + config.name + "：</strong>" +
+        "綜合評分 " + score +
+        " 分，屬於目前較弱訊號。</p>"
+      );
+    }
+  });
+
+  if (messages.length === 0) {
+    el.innerHTML =
+      "<strong>⚠️ 今日值得注意</strong>" +
+      "<p>目前沒有明顯異常訊號，維持觀察。</p>";
+  } else {
+    el.innerHTML =
+      "<strong>⚠️ 今日值得注意</strong>" +
+      messages.join("");
+  }
+}   
   async function loadStockData() {
   try {
     const response = await fetch("stocks.json?v=" + Date.now());
@@ -761,6 +827,7 @@ showAnalysis("0050", s0050);
 showDailySummary(s2303, s2408, s0050);
 showIndustryRanking(data.stocks);
 showIndustryRotation();
+showAttentionSignals(data.stocks);
     document.getElementById("update-time").textContent = data.updated + "（台北）";
     console.log("股票資料更新時間：", data.updated);
 
