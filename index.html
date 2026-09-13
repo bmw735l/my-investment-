@@ -754,20 +754,25 @@ function showAttentionSignals(stockData) {
     const institutionalNet = foreign + trust;
 
     if (percent < 0 && institutionalNet > 0) {
-      messages.push(
-        "<p>⚠️ <strong>" + config.name + "：</strong>" +
-        "股價下跌 " + Math.abs(percent).toFixed(2) +
-        "%，但外資＋投信合計買超，出現價籌背離，值得持續觀察。</p>"
-      );
+  messages.push(
+    "<p>👀 <strong>" + config.name + "：</strong>" +
+    "股價下跌 " + Math.abs(percent).toFixed(2) +
+    "%，但外資＋投信合計仍為買超。" +
+    "<br>原因：價格轉弱，但法人籌碼沒有同步轉弱。" +
+    "<br>下一步看：法人買盤是否延續，以及股價是否止跌。</p>"
+  );
+}      
 
     } else if (percent > 0 && institutionalNet < 0) {
-      messages.push(
-        "<p>⚠️ <strong>" + config.name + "：</strong>" +
-        "股價上漲 " + percent.toFixed(2) +
-        "%，但外資＋投信合計賣超，留意上漲動能是否能延續。</p>"
-      );
-    }
-
+  messages.push(
+    "<p>⚠️ <strong>" + config.name + "：</strong>" +
+    "股價上漲 " + percent.toFixed(2) +
+    "%，但外資＋投信合計為賣超。" +
+    "<br>原因：價格走強，但法人籌碼沒有同步轉強。" +
+    "<br>下一步看：股價能否續強，以及法人賣壓是否收斂。</p>"
+  );
+}
+    
   });
 
   if (messages.length === 0) {
