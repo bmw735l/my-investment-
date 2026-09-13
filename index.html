@@ -768,19 +768,6 @@ function showAttentionSignals(stockData) {
       );
     }
 
-    if (score >= 3) {
-      messages.push(
-        "<p>🔥 <strong>" + config.name + "：</strong>" +
-        "綜合評分 +" + score +
-        " 分，屬於目前較強訊號。</p>"
-      );
-    } else if (score <= -3) {
-      messages.push(
-        "<p>🔻 <strong>" + config.name + "：</strong>" +
-        "綜合評分 " + score +
-        " 分，屬於目前較弱訊號。</p>"
-      );
-    }
   });
 
   if (messages.length === 0) {
