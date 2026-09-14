@@ -438,6 +438,13 @@ h1 {
   <div id="decision-status" style="margin-top:10px;"></div>
 </div>
 </div>
+<div class="card">
+  <div class="section-title">📒 我的交易紀錄</div>
+
+  <div id="trade-records">
+    <p>目前還沒有交易紀錄。</p>
+  </div>
+</div>  
 <div class="footer">
 我的投資情報站 V1
 </div>
@@ -911,7 +918,47 @@ function showAttentionSignals(stockData) {
       "<strong>⚠️ 今日值得注意</strong>" +
       messages.join("");
   }
-}   
+}
+  function showTradeRecords() {
+  const container = document.getElementById("trade-records");
+  if (!container) return;
+
+  const records = JSON.parse(
+    localStorage.getItem("tradeDecisions") || "[]"
+  );
+
+  if (records.length === 0) {
+    container.innerHTML = "<p>目前還沒有交易紀錄。</p>";
+    return;
+  }
+
+  let html = "";
+
+  records
+    .slice()
+    .reverse()
+    .forEach(record => {
+      html +=
+        "<div style='padding:14px 0; border-bottom:1px solid #ddd;'>" +
+        "<p><strong>" + record.time + "｜" +
+        record.name + " " + record.code + "</strong></p>" +
+        "<p>當時股價：" + record.price.toLocaleString() + " 元" +
+        "｜股數：" + record.shares.toLocaleString() + " 股" +
+        "｜投入：" + record.actualAmount.toLocaleString() + " 元</p>" +
+        "<p>原因：" +
+        (record.reasons.length > 0
+          ? record.reasons.join("、")
+          : "未填寫") +
+        "</p>" +
+        "<p>我的判斷：" +
+        (record.note || "未填寫") +
+        "</p>" +
+        "<p><strong>狀態：尚未結案</strong></p>" +
+        "</div>";
+    });
+
+  container.innerHTML = html;
+}
   function updateEntryCalculator(stockData) {
   const stockSelect = document.getElementById("entry-stock");
   const budgetInput = document.getElementById("entry-budget");
@@ -1016,6 +1063,7 @@ function showAttentionSignals(stockData) {
           " 股｜" +
           record.reasons.join("、");
       }
+      showTradeRecords();
     });
   }  
 }
@@ -1055,6 +1103,7 @@ showIndustryRanking(data.stocks);
 showIndustryRotation();
 showAttentionSignals(data.stocks);
 updateEntryCalculator(data.stocks);
+showTradeRecords();    
     document.getElementById("update-time").textContent = data.updated + "（台北）";
     console.log("股票資料更新時間：", data.updated);
 
