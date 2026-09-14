@@ -955,6 +955,69 @@ function showAttentionSignals(stockData) {
   budgetInput.addEventListener("input", calculate);
 
   calculate();
+  const saveButton = document.getElementById("save-decision");
+  const noteInput = document.getElementById("buy-note");
+  const statusEl = document.getElementById("decision-status");
+
+  if (saveButton) {
+    saveButton.addEventListener("click", function() {
+      const code = stockSelect.value;
+      const stock = stockData[code];
+
+      if (!stock) return;
+
+      const price = Number(String(stock.price).replace(/,/g, ""));
+      const budget = Number(budgetInput.value);
+      const shares = Math.floor(budget / price);
+      const actualAmount = shares * price;
+
+      const selectedReasons = Array.from(
+        document.querySelectorAll('input[name="buy-reason"]:checked')
+      ).map(item => item.value);
+
+      const note = noteInput ? noteInput.value.trim() : "";
+
+      if (selectedReasons.length === 0 && note === "") {
+        if (statusEl) {
+          statusEl.textContent = "⚠️ 請至少勾選一個理由，或寫下自己的判斷。";
+        }
+        return;
+      }
+
+      const record = {
+        time: new Date().toLocaleString("zh-TW"),
+        code: code,
+        name: stockConfig[code]?.name || stock.name || code,
+        price: price,
+        budget: budget,
+        shares: shares,
+        actualAmount: actualAmount,
+        reasons: selectedReasons,
+        note: note
+      };
+
+      const records = JSON.parse(
+        localStorage.getItem("tradeDecisions") || "[]"
+      );
+
+      records.push(record);
+
+      localStorage.setItem(
+        "tradeDecisions",
+        JSON.stringify(records)
+      );
+
+      if (statusEl) {
+        statusEl.textContent =
+          "✅ 已儲存：" +
+          record.name +
+          " " +
+          record.shares +
+          " 股｜" +
+          record.reasons.join("、");
+      }
+    });
+  }  
 }
   async function loadStockData() {
   try {
