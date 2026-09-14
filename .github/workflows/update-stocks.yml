@@ -110,7 +110,12 @@ jobs:
               )
 
           # Save daily history
-          today = datetime.now(taipei).strftime("%Y-%m-%d")
+          market_date = t86.get("date", "")
+
+          if len(market_date) == 8:
+              today = f"{market_date[0:4]}-{market_date[4:6]}-{market_date[6:8]}"
+          else:
+              today = datetime.now(taipei).strftime("%Y-%m-%d")
 
           try:
               with open("history.json", "r", encoding="utf-8") as f:
