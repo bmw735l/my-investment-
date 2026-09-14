@@ -379,6 +379,64 @@ h1 {
   <div id="entry-result">
     <p>等待股票資料...</p>
   </div>
+  <hr style="margin:22px 0;">
+
+<div id="decision-note">
+  <strong>📝 這筆交易，我為什麼想買？</strong>
+
+  <div style="margin-top:12px; line-height:2;">
+    <label>
+      <input type="checkbox" name="buy-reason" value="族群轉強">
+      族群轉強
+    </label><br>
+
+    <label>
+      <input type="checkbox" name="buy-reason" value="法人籌碼改善">
+      法人籌碼改善
+    </label><br>
+
+    <label>
+      <input type="checkbox" name="buy-reason" value="個股強於同族">
+      個股強於同族
+    </label><br>
+
+    <label>
+      <input type="checkbox" name="buy-reason" value="價格與籌碼背離">
+      價格與籌碼出現值得注意的背離
+    </label><br>
+
+    <label>
+      <input type="checkbox" name="buy-reason" value="技術面">
+      技術面／價格位置
+    </label><br>
+
+    <label>
+      <input type="checkbox" name="buy-reason" value="老子自己爽決定的">
+      😎 老子自己爽決定的
+    </label>
+  </div>
+
+  <p style="margin-top:14px;">
+    <strong>我的判斷：</strong>
+  </p>
+
+  <textarea
+    id="buy-note"
+    rows="3"
+    placeholder="例如：先買小部位觀察，法人若持續買超再考慮第二筆。"
+    style="width:100%; box-sizing:border-box;"
+  ></textarea>
+
+  <button
+    id="save-decision"
+    type="button"
+    style="margin-top:12px;"
+  >
+    儲存這次判斷
+  </button>
+
+  <div id="decision-status" style="margin-top:10px;"></div>
+</div>
 </div>
 <div class="footer">
 我的投資情報站 V1
