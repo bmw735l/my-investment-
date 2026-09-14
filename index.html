@@ -346,7 +346,40 @@ h1 {
     不預測明天漲跌，先找出值得注意的變化。
   </p>
 </div>
+<div class="card">
+  <div class="section-title">💰 進場試算</div>
 
+  <p>
+    總實戰資金：<strong>200,000 元</strong>
+  </p>
+
+  <label for="entry-stock">選擇股票：</label>
+  <select id="entry-stock">
+    <option value="2303">聯電 2303</option>
+    <option value="2408">南亞科 2408</option>
+    <option value="0050">元大台灣50 0050</option>
+    <option value="2330">台積電 2330</option>
+    <option value="2344">華邦電 2344</option>
+    <option value="2454">聯發科 2454</option>
+    <option value="2317">鴻海 2317</option>
+  </select>
+
+  <p>
+    預計投入金額：
+    <input
+      id="entry-budget"
+      type="number"
+      value="50000"
+      min="0"
+      step="1000"
+    >
+    元
+  </p>
+
+  <div id="entry-result">
+    <p>等待股票資料...</p>
+  </div>
+</div>
 <div class="footer">
 我的投資情報站 V1
 </div>
@@ -821,6 +854,50 @@ function showAttentionSignals(stockData) {
       messages.join("");
   }
 }   
+  function updateEntryCalculator(stockData) {
+  const stockSelect = document.getElementById("entry-stock");
+  const budgetInput = document.getElementById("entry-budget");
+  const resultEl = document.getElementById("entry-result");
+
+  if (!stockSelect || !budgetInput || !resultEl) return;
+
+  const totalCapital = 200000;
+
+  function calculate() {
+    const code = stockSelect.value;
+    const stock = stockData[code];
+
+    if (!stock) {
+      resultEl.innerHTML = "<p>目前沒有這檔股票資料。</p>";
+      return;
+    }
+
+    const price = Number(String(stock.price).replace(/,/g, ""));
+    const budget = Number(budgetInput.value);
+
+    if (!price || price <= 0 || !budget || budget <= 0) {
+      resultEl.innerHTML = "<p>請輸入有效的投入金額。</p>";
+      return;
+    }
+
+    const shares = Math.floor(budget / price);
+    const actualAmount = shares * price;
+    const capitalRatio = (actualAmount / totalCapital) * 100;
+    const remainingCash = totalCapital - actualAmount;
+
+    resultEl.innerHTML =
+      "<p>目前股價：<strong>" + price.toLocaleString() + " 元</strong></p>" +
+      "<p>可買股數：<strong>" + shares.toLocaleString() + " 股</strong></p>" +
+      "<p>實際投入：<strong>" + actualAmount.toLocaleString() + " 元</strong></p>" +
+      "<p>占總資金：<strong>" + capitalRatio.toFixed(1) + "%</strong></p>" +
+      "<p>剩餘現金：<strong>" + remainingCash.toLocaleString() + " 元</strong></p>";
+  }
+
+  stockSelect.addEventListener("change", calculate);
+  budgetInput.addEventListener("input", calculate);
+
+  calculate();
+}
   async function loadStockData() {
   try {
     const response = await fetch("stocks.json?v=" + Date.now());
@@ -856,6 +933,7 @@ showDailySummary(s2303, s2408, s0050);
 showIndustryRanking(data.stocks);
 showIndustryRotation();
 showAttentionSignals(data.stocks);
+updateEntryCalculator(data.stocks);
     document.getElementById("update-time").textContent = data.updated + "（台北）";
     console.log("股票資料更新時間：", data.updated);
 
