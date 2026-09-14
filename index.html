@@ -426,7 +426,14 @@ h1 {
     placeholder="例如：先買小部位觀察，法人若持續買超再考慮第二筆。"
     style="width:100%; box-sizing:border-box;"
   ></textarea>
-
+  <p style="margin-top:14px;">
+  <strong>交易狀態：</strong>
+  <select id="trade-status">
+    <option value="plan" selected>📝 觀察／計畫</option>
+    <option value="bought">🟢 已買進</option>
+  </select>
+</p>
+  
   <button
     id="save-decision"
     type="button"
@@ -953,7 +960,10 @@ function showAttentionSignals(stockData) {
         "<p>我的判斷：" +
         (record.note || "未填寫") +
         "</p>" +
-        "<p><strong>狀態：尚未結案</strong></p>" +
+        "<p><strong>交易狀態：" +
+        (record.tradeStatus === "bought" ? "🟢 已買進" : "📝 觀察／計畫") +
+        "</strong></p>" +
+        "<p><strong>結果：尚未結案</strong></p>" +
         "</div>";
     });
 
@@ -1005,6 +1015,7 @@ function showAttentionSignals(stockData) {
   const saveButton = document.getElementById("save-decision");
   const noteInput = document.getElementById("buy-note");
   const statusEl = document.getElementById("decision-status");
+  const tradeStatusInput = document.getElementById("trade-status");  
 
   if (saveButton) {
     saveButton.addEventListener("click", function() {
@@ -1040,7 +1051,8 @@ function showAttentionSignals(stockData) {
         shares: shares,
         actualAmount: actualAmount,
         reasons: selectedReasons,
-        note: note
+        note: note,
+        tradeStatus: tradeStatusInput ? tradeStatusInput.value : "plan"
       };
 
       const records = JSON.parse(
