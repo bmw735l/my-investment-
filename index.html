@@ -433,7 +433,30 @@ h1 {
     <option value="bought">🟢 已買進</option>
   </select>
 </p>
-  
+  <div id="actual-trade-fields" style="margin-top:12px;">
+  <p>
+    <strong>實際成交價：</strong>
+    <input
+      id="actual-price"
+      type="number"
+      step="0.01"
+      placeholder="成交後填寫"
+    >
+    元
+  </p>
+
+  <p>
+    <strong>實際成交股數：</strong>
+    <input
+      id="actual-shares"
+      type="number"
+      step="1"
+      min="0"
+      placeholder="成交後填寫"
+    >
+    股
+  </p>
+</div>   
   <button
     id="save-decision"
     type="button"
@@ -961,9 +984,23 @@ function showAttentionSignals(stockData) {
         (record.note || "未填寫") +
         "</p>" +
         "<p><strong>交易狀態：" +
-        (record.tradeStatus === "bought" ? "🟢 已買進" : "📝 觀察／計畫") +
+        (record.tradeStatus === "bought" ? "🟢 已買進／持有中" : "📝 觀察／計畫") +
         "</strong></p>" +
+
+        (record.tradeStatus === "bought" &&
+        record.actualPrice != null &&
+        record.actualShares != null
+         ? "<p>實際成交價：" +
+           Number(record.actualPrice).toLocaleString() + " 元" +
+           "｜實際成交股數：" +
+           Number(record.actualShares).toLocaleString() + " 股" +
+           "｜實際投入：" +
+          (Number(record.actualPrice) * Number(record.actualShares)).toLocaleString() +
+          " 元</p>"
+         : "") +
+ 
         "<p><strong>結果：尚未結案</strong></p>" +
+        
         "</div>";
     });
 
@@ -1016,7 +1053,26 @@ function showAttentionSignals(stockData) {
   const noteInput = document.getElementById("buy-note");
   const statusEl = document.getElementById("decision-status");
   const tradeStatusInput = document.getElementById("trade-status");  
+  const actualPriceInput = document.getElementById("actual-price");
+  const actualSharesInput = document.getElementById("actual-shares");
+  if (tradeStatusInput) {
+  tradeStatusInput.addEventListener("change", function() {
+    if (tradeStatusInput.value === "bought") {
+      const code = stockSelect.value;
+      const stock = stockData[code];
 
+      if (!stock) return;
+
+      const price = Number(String(stock.price).replace(/,/g, ""));
+      const budget = Number(budgetInput.value);
+      const shares = Math.floor(budget / price);
+
+      actualPriceInput.value = price;
+      actualSharesInput.value = shares;
+    }
+  });
+}
+    
   if (saveButton) {
     saveButton.addEventListener("click", function() {
       const code = stockSelect.value;
@@ -1050,6 +1106,12 @@ function showAttentionSignals(stockData) {
         budget: budget,
         shares: shares,
         actualAmount: actualAmount,
+        actualPrice: tradeStatusInput && tradeStatusInput.value === "bought"
+          ? Number(actualPriceInput.value)
+          : null,
+        actualShares: tradeStatusInput && tradeStatusInput.value === "bought"
+          ? Number(actualSharesInput.value)
+          : null,
         reasons: selectedReasons,
         note: note,
         tradeStatus: tradeStatusInput ? tradeStatusInput.value : "plan"
