@@ -76,6 +76,29 @@
   color: #1e293b;
   font-size: 15px;
   margin-bottom: 8px;
+}
+/* 系統精選 + 我的自選：雙欄情報區 */
+.pick-dashboard {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  margin-top: 20px;
+  align-items: start;
+}
+
+.pick-section {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 18px;
+  min-width: 0;
+}
+
+/* 手機版自動改回單欄 */
+@media (max-width: 760px) {
+  .pick-dashboard {
+    grid-template-columns: 1fr;
+  }
 }  
 * { box-sizing: border-box; }
 
@@ -402,14 +425,18 @@ h1 {
     <p>正在整理今日市場情報...</p>
   </div>
   
-<div id="system-picks" style="margin-top:20px;">
-  <strong>⭐ 系統精選 3 檔</strong>
-  <p>正在分析 10 檔情報觀察池...</p>
-</div>
-  
-<div id="my-watchlist" style="margin-top:20px;">
-  <strong>❤️ 我的自選 3 檔</strong>
-  <p>正在載入自選股票...</p>
+<div class="pick-dashboard">
+
+  <div id="system-picks" class="pick-section">
+    <strong>⭐ 系統精選 3 檔</strong>
+    <p>正在分析 10 檔情報觀察池...</p>
+  </div>
+
+  <div id="my-watchlist" class="pick-section">
+    <strong>❤️ 我的自選 3 檔</strong>
+    <p>正在載入自選股票...</p>
+  </div>
+
 </div>  
   
 <div id="industry-ranking" style="margin-top:20px;">
