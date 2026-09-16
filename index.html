@@ -749,6 +749,15 @@ function showSystemPicks(stockData, previousStocks = {}) {
           info.infoScore += 2;
           info.reasons.push("法人由買轉賣");
         }
+        const currentResult = getStockScore(stockData[code]);
+
+        if (previousResult.score <= -2 && currentResult.score >= 2) {
+        info.infoScore += 2;
+        info.reasons.push("個股由弱轉強");
+        } else if (previousResult.score >= 2 && currentResult.score <= -2) {
+        info.infoScore += 2;
+        info.reasons.push("個股由強轉弱");
+        }
       }
       return {
         code,
