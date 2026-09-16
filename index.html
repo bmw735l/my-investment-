@@ -364,6 +364,11 @@ h1 {
   <p>正在分析 10 檔情報觀察池...</p>
 </div>
   
+<div id="my-watchlist" style="margin-top:20px;">
+  <strong>❤️ 我的自選 3 檔</strong>
+  <p>正在載入自選股票...</p>
+</div>  
+  
 <div id="industry-ranking" style="margin-top:20px;">
   <strong>🔥 族群強弱排名</strong>
   <p>正在整理族群資料...</p>
@@ -1045,7 +1050,90 @@ function showIndustryRanking(stockData) {
 
   el.innerHTML = html;
 }
-  
+function showMyWatchlist(stockData) {
+  const el = document.getElementById("my-watchlist");
+  if (!el) return;
+
+  const codes = Object.keys(stockConfig).filter(code => stockData[code]);
+
+  let saved = [];
+  try {
+    saved = JSON.parse(localStorage.getItem("myWatchlist") || "[]");
+  } catch (e) {
+    saved = [];
+  }
+
+  saved = saved.filter(code => codes.includes(code)).slice(0, 3);
+
+  if (saved.length === 0) {
+    saved = ["2330", "2408", "2308"].filter(code => codes.includes(code));
+  }
+
+  while (saved.length < 3 && codes.length > saved.length) {
+    const nextCode = codes.find(code => !saved.includes(code));
+    if (!nextCode) break;
+    saved.push(nextCode);
+  }
+
+  localStorage.setItem("myWatchlist", JSON.stringify(saved));
+
+  let html = "<strong>❤️ 我的自選 3 檔</strong>";
+
+  saved.forEach((selectedCode, index) => {
+    html +=
+      '<div class="watchlist-item" style="margin-top:12px;">' +
+      "<strong>" + (index + 1) + ".</strong> " +
+      '<select class="watchlist-select" data-index="' + index + '">';
+
+    codes.forEach(code => {
+      const config = stockConfig[code];
+      const selected = code === selectedCode ? " selected" : "";
+
+      html +=
+        '<option value="' + code + '"' + selected + ">" +
+        config.name + " " + code +
+        "</option>";
+    });
+
+    html += "</select>";
+
+    const stock = stockData[selectedCode];
+
+    if (stock) {
+      const info = getInformationScore(stock);
+
+      html +=
+        '<div style="margin-top:6px;">' +
+        "族群：" + stockConfig[selectedCode].group +
+        "｜情報值 " + info.infoScore +
+        "</div>";
+    }
+
+    html += "</div>";
+  });
+
+  el.innerHTML = html;
+
+  el.querySelectorAll(".watchlist-select").forEach(select => {
+    select.addEventListener("change", event => {
+      const index = Number(event.target.dataset.index);
+      const newCode = event.target.value;
+
+      const updated = [...saved];
+
+      if (updated.includes(newCode)) {
+        event.target.value = saved[index];
+        alert("這檔股票已經在你的自選 3 檔中。");
+        return;
+      }
+
+      updated[index] = newCode;
+      localStorage.setItem("myWatchlist", JSON.stringify(updated));
+
+      showMyWatchlist(stockData);
+    });
+  });
+}  
 async function showIndustryRotation() {
   const el = document.getElementById("industry-rotation");
   if (!el) return;
@@ -1446,6 +1534,7 @@ showChange("0050", s0050);
 showAnalysis("0050", s0050);
 showDailySummary(s2303, s2408, s0050);
 showSystemPicks(data.stocks, previousStocks);
+showMyWatchlist(data.stocks);
 showIndustryRanking(data.stocks);
 showIndustryRotation();
 showAttentionSignals(data.stocks);
