@@ -728,12 +728,41 @@ function getInformationScore(stock) {
 function showSystemPicks(stockData, previousStocks = {}) {
   const el = document.getElementById("system-picks");
   if (!el) return;
+  const currentRanking = getIndustryRanking(stockData);
+  const previousRanking = getIndustryRanking(previousStocks);
 
+  const currentGroupScores = {};
+  const previousGroupScores = {};
+
+  currentRanking.forEach(item => {
+    currentGroupScores[item.name] = item.score;
+  });
+
+  previousRanking.forEach(item => {
+    previousGroupScores[item.name] = item.score;
+  });
+  
   const picks = Object.keys(stockConfig)
     .filter(code => stockData[code])
     .map(code => {
       const info = getInformationScore(stockData[code]);
       const previousStock = previousStocks[code];
+      const group = stockConfig[code].group;
+      const currentGroupScore = currentGroupScores[group];
+      const previousGroupScore = previousGroupScores[group];
+
+      if (
+        previousGroupScore !== undefined &&
+        currentGroupScore !== undefined
+      ) {
+        if (previousGroupScore <= -2 && currentGroupScore >= 2) {
+        info.infoScore += 2;
+        info.reasons.push("族群由弱轉強");
+      } else if (previousGroupScore >= 2 && currentGroupScore <= -2) {
+        info.infoScore += 2;
+        info.reasons.push("族群由強轉弱");
+        }
+      }
 
       if (previousStock) {
         const previousResult = getStockScore(previousStock);
