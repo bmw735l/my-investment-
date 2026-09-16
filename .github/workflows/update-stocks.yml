@@ -23,24 +23,9 @@ jobs:
           import urllib.request
           from datetime import datetime, timezone, timedelta
 
-          url = "https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL"
+          taipei = timezone(timedelta(hours=8))
+          now = datetime.now(taipei)
 
-          req = urllib.request.Request(
-              url,
-              headers={"User-Agent": "Mozilla/5.0"}
-          )
-
-          with urllib.request.urlopen(req, timeout=30) as response:
-              data = json.loads(response.read().decode("utf-8"))
-          t86_url = "https://www.twse.com.tw/rwd/zh/fund/T86?selectType=ALL&response=json"
-
-          t86_req = urllib.request.Request(
-              t86_url,
-              headers={"User-Agent": "Mozilla/5.0"}
-          )
-
-          with urllib.request.urlopen(t86_req, timeout=30) as response:
-              t86 = json.loads(response.read().decode("utf-8"))
           wanted = {
               "2303": "聯電",
               "2408": "南亞科",
@@ -50,6 +35,96 @@ jobs:
               "2454": "聯發科",
               "2317": "鴻海"
           }
+
+          headers = {"User-Agent": "Mozilla/5.0"}
+
+          # -------------------------------------------------
+          # 1. 從 STOCK_DAY 取得每檔股票最新交易日行情
+          # -------------------------------------------------
+          result = {}
+          trade_dates = set()
+
+          for code, name in wanted.items():
+              url = (
+                  "https://www.twse.com.tw/rwd/zh/afterTrading/"
+                  f"STOCK_DAY?stockNo={code}&response=json"
+              )
+
+              req = urllib.request.Request(url, headers=headers)
+
+              with urllib.request.urlopen(req, timeout=30) as response:
+                  stock_data = json.loads(
+                      response.read().decode("utf-8")
+                  )
+
+              rows = stock_data.get("data", [])
+
+              if not rows:
+                  raise RuntimeError(
+                      f"{code} {name}: STOCK_DAY 沒有取得行情資料"
+                  )
+
+              # 最後一筆 = API 回傳的最新交易日
+              row = rows[-1]
+
+              # STOCK_DAY:
+              # 0 日期
+              # 1 成交股數
+              # 2 成交金額
+              # 3 開盤價
+              # 4 最高價
+              # 5 最低價
+              # 6 收盤價
+              # 7 漲跌價差
+              # 8 成交筆數
+              roc_date = row[0]
+
+              # 民國日期轉西元日期
+              y, m, d = roc_date.split("/")
+              trade_date = (
+                  f"{int(y) + 1911:04d}-{int(m):02d}-{int(d):02d}"
+              )
+
+              trade_dates.add(trade_date)
+
+              result[code] = {
+                  "name": name,
+                  "price": row[6].replace(",", ""),
+                  "change": row[7].replace(",", ""),
+                  "volume": row[1].replace(",", ""),
+                  "foreign": "--",
+                  "trust": "--",
+                  "dealer": "--"
+              }
+
+          # -------------------------------------------------
+          # 2. 所有股票必須屬於同一交易日
+          # -------------------------------------------------
+          if len(trade_dates) != 1:
+              raise RuntimeError(
+                  f"股票行情日期不一致，停止更新: {sorted(trade_dates)}"
+              )
+
+          stock_trade_date = next(iter(trade_dates))
+
+          # -------------------------------------------------
+          # 3. 取得 T86 三大法人資料
+          # -------------------------------------------------
+          t86_url = (
+              "https://www.twse.com.tw/rwd/zh/fund/"
+              "T86?selectType=ALL&response=json"
+          )
+
+          t86_req = urllib.request.Request(
+              t86_url,
+              headers=headers
+          )
+
+          with urllib.request.urlopen(t86_req, timeout=30) as response:
+              t86 = json.loads(
+                  response.read().decode("utf-8")
+              )
+
           fields = t86.get("fields", [])
           rows = t86.get("data", [])
 
@@ -74,34 +149,67 @@ jobs:
 
               if code in wanted:
                   institutional[code] = {
-                      "foreign": row[foreign_idx] if foreign_idx is not None else "--",
-                      "trust": row[trust_idx] if trust_idx is not None else "--",
-                      "dealer": row[dealer_idx] if dealer_idx is not None else "--"
+                      "foreign":
+                          row[foreign_idx]
+                          if foreign_idx is not None else "--",
+                      "trust":
+                          row[trust_idx]
+                          if trust_idx is not None else "--",
+                      "dealer":
+                          row[dealer_idx]
+                          if dealer_idx is not None else "--"
                   }
-          result = {}
 
-          for item in data:
-            code = item.get("Code")
+          for code in result:
+              inst = institutional.get(code, {})
 
-            if code in wanted:
-                result[code] = {
-                    "name": wanted[code],
-                    "price": item.get("ClosingPrice", "--"),
-                    "change": item.get("Change", "--"),
-                    "volume": item.get("TradeVolume", "--"),
-                    "foreign": institutional.get(code, {}).get("foreign", "--"),
-                    "trust": institutional.get(code, {}).get("trust", "--"),
-                    "dealer": institutional.get(code, {}).get("dealer", "--")
-                }        
+              result[code]["foreign"] = inst.get(
+                  "foreign", "--"
+              )
+              result[code]["trust"] = inst.get(
+                  "trust", "--"
+              )
+              result[code]["dealer"] = inst.get(
+                  "dealer", "--"
+              )
 
-          taipei = timezone(timedelta(hours=8))
+          # -------------------------------------------------
+          # 4. 驗證 T86 與行情是否為同一交易日
+          # -------------------------------------------------
+          market_date = t86.get("date", "")
 
+          if len(market_date) == 8:
+              t86_trade_date = (
+                  f"{market_date[0:4]}-"
+                  f"{market_date[4:6]}-"
+                  f"{market_date[6:8]}"
+              )
+          else:
+              raise RuntimeError(
+                  f"T86 無法取得有效交易日期: {market_date}"
+              )
+
+          if stock_trade_date != t86_trade_date:
+              raise RuntimeError(
+                  "行情與法人資料日期不一致，停止更新。"
+                  f" STOCK_DAY={stock_trade_date},"
+                  f" T86={t86_trade_date}"
+              )
+
+          # -------------------------------------------------
+          # 5. 日期一致才寫入 stocks.json
+          # -------------------------------------------------
           output = {
-              "updated": datetime.now(taipei).strftime("%Y-%m-%d %H:%M"),
+              "trade_date": stock_trade_date,
+              "updated": now.strftime("%Y-%m-%d %H:%M"),
               "stocks": result
           }
 
-          with open("stocks.json", "w", encoding="utf-8") as f:
+          with open(
+              "stocks.json",
+              "w",
+              encoding="utf-8"
+          ) as f:
               json.dump(
                   output,
                   f,
@@ -109,39 +217,57 @@ jobs:
                   indent=2
               )
 
-          # Save daily history
-          market_date = t86.get("date", "")
-
-          if len(market_date) == 8:
-              today = f"{market_date[0:4]}-{market_date[4:6]}-{market_date[6:8]}"
-          else:
-              today = datetime.now(taipei).strftime("%Y-%m-%d")
-
+          # -------------------------------------------------
+          # 6. 日期一致才更新 history.json
+          # -------------------------------------------------
           try:
-              with open("history.json", "r", encoding="utf-8") as f:
+              with open(
+                  "history.json",
+                  "r",
+                  encoding="utf-8"
+              ) as f:
                   history = json.load(f)
           except (FileNotFoundError, json.JSONDecodeError):
               history = {}
 
-          history[today] = {
+          # 同一天重新執行會直接覆寫，修正錯誤資料
+          history[stock_trade_date] = {
               "updated": output["updated"],
+              "trade_date": stock_trade_date,
               "stocks": result
           }
 
-          # Keep the latest 60 trading/calendar entries
+          # 保留最近 60 個交易日
           if len(history) > 60:
               old_dates = sorted(history.keys())[:-60]
+
               for old_date in old_dates:
                   del history[old_date]
 
-          with open("history.json", "w", encoding="utf-8") as f:
+          with open(
+              "history.json",
+              "w",
+              encoding="utf-8"
+          ) as f:
               json.dump(
                   history,
                   f,
                   ensure_ascii=False,
                   indent=2
               )
-          print(json.dumps(output, ensure_ascii=False, indent=2))
+
+          print(
+              json.dumps(
+                  output,
+                  ensure_ascii=False,
+                  indent=2
+              )
+          )
+
+          print(
+              f"SUCCESS: trade_date={stock_trade_date}, "
+              f"updated={output['updated']}"
+          )
           PY
 
       - name: Save stock data
