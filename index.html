@@ -4,7 +4,40 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>我的投資情報站</title>
+/* 系統精選 3 檔卡片 */
+.system-pick-card {
+  background: #262a30;
+  border: 1px solid #3a4048;
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin-top: 14px;
+}
 
+.pick-title {
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+.info-score {
+  display: inline-block;
+  margin-left: 10px;
+  padding: 3px 9px;
+  border-radius: 12px;
+  background: #3a4048;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.pick-group {
+  color: #b9c0c8;
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+.pick-block {
+  margin-top: 10px;
+  line-height: 1.7;
+}
 <style>
 * { box-sizing: border-box; }
 
@@ -828,21 +861,52 @@ function showSystemPicks(stockData, previousStocks = {}) {
   let html = "<strong>⭐ 系統精選 3 檔</strong>";
 
   selected.forEach((item, index) => {
-    const reasonText =
-      item.reasons.length > 0
-        ? item.reasons.join("＋")
-        : "目前無明顯異常訊號";
+  const coreChanges = item.reasons.filter(reason =>
+    reason.includes("由弱轉強") ||
+    reason.includes("由強轉弱") ||
+    reason.includes("由賣轉買") ||
+    reason.includes("由買轉賣")
+  );
 
-    html +=
-      "<p>" +
-      medals[index] + " <strong>" +
-      item.name + " " + item.code +
-      "</strong>｜情報值 " + item.infoScore +
-      "<br>族群：" + item.group +
-      "<br>入選原因：" + reasonText +
-      "</p>";
-  });
+  const todaySignals = item.reasons.filter(reason =>
+    !coreChanges.includes(reason)
+  );
 
+  const coreText =
+    coreChanges.length > 0
+      ? coreChanges.map(reason => "• " + reason).join("<br>")
+      : "• 今日無明顯翻轉訊號";
+
+  const signalText =
+    todaySignals.length > 0
+      ? todaySignals.map(reason => "• " + reason).join("<br>")
+      : "• 今日無其他明顯訊號";
+
+  html +=
+    '<div class="system-pick-card">' +
+      '<div class="pick-title">' +
+        medals[index] + " <strong>" +
+        item.name + " " + item.code +
+        "</strong>" +
+        '<span class="info-score">情報值 ' +
+        item.infoScore + "</span>" +
+      "</div>" +
+
+      '<div class="pick-group">族群：' +
+        item.group +
+      "</div>" +
+
+      '<div class="pick-block">' +
+        "<strong>🎯 核心變化</strong><br>" +
+        coreText +
+      "</div>" +
+
+      '<div class="pick-block">' +
+        "<strong>📊 今日訊號</strong><br>" +
+        signalText +
+      "</div>" +
+    "</div>";
+});
   el.innerHTML = html;
 }  
 function showAnalysis(code, stock) {
