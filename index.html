@@ -1343,22 +1343,27 @@ async function showIndustryRotation() {
 
       const diff = item.score - oldScore;
 
-      let trend = "➡️ 持平";
+      let trend = "🟡 → 持平";
 
-      if (diff >= 1) {
-        trend = "↗️ 轉強";
-      } else if (diff <= -1) {
-        trend = "↘️ 轉弱";
+      if (oldScore <= 0 && item.score >= 2) {
+          trend = "🟢 ↑ 轉強";
+      } else if (oldScore >= 0 && item.score <= -2) {
+          trend = "🔴 ↓ 轉弱";
+      } else if (diff >= 2) {
+          trend = "🟢 ↑ 改善";
+      } else if (diff <= -2) {
+          trend = "🔴 ↓ 降溫";
       }
 
       const diffText = diff > 0 ? "+" + diff : diff;
+      const oldText = oldScore > 0 ? "+" + oldScore : oldScore;
+      const newText = item.score > 0 ? "+" + item.score : item.score;
 
       html +=
-        "<p><strong>" + item.name + "：</strong>" +
-        trend +
-        "｜" + oldScore + " → " + item.score +
-        "（" + diffText + "）</p>";
-    });
+          "<p><strong>" + item.name + "</strong>　" +
+          trend +
+          "　" + oldText + " → " + newText +
+          "　<strong>(" + diffText + ")</strong></p>";
 
     el.innerHTML = html;
 
