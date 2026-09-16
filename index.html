@@ -725,7 +725,7 @@ function getInformationScore(stock) {
     institutionalNet
   };
 }
-function showSystemPicks(stockData) {
+function showSystemPicks(stockData, previousStocks = {}) {
   const el = document.getElementById("system-picks");
   if (!el) return;
 
@@ -733,7 +733,23 @@ function showSystemPicks(stockData) {
     .filter(code => stockData[code])
     .map(code => {
       const info = getInformationScore(stockData[code]);
+      const previousStock = previousStocks[code];
 
+      if (previousStock) {
+        const previousResult = getStockScore(previousStock);
+        const previousNet =
+          previousResult.foreign + previousResult.trust;
+
+        const currentNet = info.institutionalNet;
+
+        if (previousNet < 0 && currentNet > 0) {
+          info.infoScore += 2;
+          info.reasons.push("法人由賣轉買");
+        } else if (previousNet > 0 && currentNet < 0) {
+          info.infoScore += 2;
+          info.reasons.push("法人由買轉賣");
+        }
+      }
       return {
         code,
         name: stockConfig[code].name,
@@ -1284,7 +1300,22 @@ function showAttentionSignals(stockData) {
   try {
     const response = await fetch("stocks.json?v=" + Date.now());
     const data = await response.json();
+    const historyResponse = await fetch("history.json?v=" + Date.now());
+    const history = await historyResponse.json();
 
+    const historyDates = Object.keys(history).sort();
+    const currentTradeDate = data.trade_date;
+
+    const previousDates = historyDates.filter(date => date < currentTradeDate);
+    const previousTradeDate =
+  previousDates.length > 0
+    ? previousDates[previousDates.length - 1]
+    : null;
+
+const previousStocks =
+  previousTradeDate && history[previousTradeDate]
+    ? history[previousTradeDate].stocks
+    : {};
     const s2303 = data.stocks["2303"];
     const s2408 = data.stocks["2408"];
     const s0050 = data.stocks["0050"];
@@ -1312,7 +1343,7 @@ showAnalysis("2408", s2408);
 showChange("0050", s0050);
 showAnalysis("0050", s0050);
 showDailySummary(s2303, s2408, s0050);
-showSystemPicks(data.stocks);
+showSystemPicks(data.stocks, previousStocks);
 showIndustryRanking(data.stocks);
 showIndustryRotation();
 showAttentionSignals(data.stocks);
