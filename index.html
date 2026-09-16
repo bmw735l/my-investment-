@@ -1053,7 +1053,7 @@ function showIndustryRanking(stockData) {
 
   el.innerHTML = html;
 }
-function showMyWatchlist(stockData) {
+function showMyWatchlist(stockData, previousStocks = {}) {
   const el = document.getElementById("my-watchlist");
   if (!el) return;
 
@@ -1104,13 +1104,78 @@ function showMyWatchlist(stockData) {
 
     if (stock) {
       const info = getInformationScore(stock);
+      const previousStock = previousStocks[selectedCode];
 
-      html +=
-        '<div style="margin-top:6px;">' +
-        "族群：" + stockConfig[selectedCode].group +
+    if (previousStock) {
+      const previousResult = getStockScore(previousStock);
+      const currentResult = getStockScore(stock);
+
+      const previousNet =
+        previousResult.foreign + previousResult.trust;
+
+      const currentNet =
+        currentResult.foreign + currentResult.trust;
+
+   if (previousNet < 0 && currentNet > 0) {
+     info.infoScore += 2;
+     info.reasons.push("法人由賣轉買");
+   } else if (previousNet > 0 && currentNet < 0) {
+     info.infoScore += 2;
+     info.reasons.push("法人由買轉賣");
+   }
+
+   if (previousResult.score <= -2 && currentResult.score >= 2) {
+     info.infoScore += 2;
+     info.reasons.push("個股由弱轉強");
+   } else if (
+     previousResult.score >= 2 &&
+     currentResult.score <= -2
+   ) {
+     info.infoScore += 2;
+     info.reasons.push("個股由強轉弱");
+   }
+ }
+  const coreReasons = info.reasons.filter(reason =>
+    reason.includes("由弱轉強") ||
+    reason.includes("由強轉弱") ||
+    reason.includes("由賣轉買") ||
+    reason.includes("由買轉賣")
+  );
+
+  const todayReasons = info.reasons.filter(reason =>
+    !coreReasons.includes(reason)
+  );
+
+  const coreText =
+    coreReasons.length > 0
+      ? coreReasons.map(reason => "• " + reason).join("<br>")
+      : "• 目前無明顯核心變化";
+
+  const signalText =
+    todayReasons.length > 0
+      ? todayReasons.map(reason => "• " + reason).join("<br>")
+      : "• 今日無明顯訊號";
+
+  html +=
+    '<div style="margin-top:6px;">' +
+      "<strong>" +
+        stockConfig[selectedCode].name + " " + selectedCode +
         "｜情報值 " + info.infoScore +
-        "</div>";
-    }
+      "</strong>" +
+      "<br>族群：" + stockConfig[selectedCode].group +
+    "</div>" +
+
+    '<div class="pick-block">' +
+      "<strong>🎯 核心變化</strong><br>" +
+      coreText +
+    "</div>" +
+
+    '<div class="pick-block">' +
+      "<strong>📊 今日訊號</strong><br>" +
+      signalText +
+    "</div>";
+}
+       
 
     html += "</div>";
   });
@@ -1133,7 +1198,7 @@ function showMyWatchlist(stockData) {
       updated[index] = newCode;
       localStorage.setItem("myWatchlist", JSON.stringify(updated));
 
-      showMyWatchlist(stockData);
+      showMyWatchlist(stockData, previousStocks);
     });
   });
 }  
@@ -1537,7 +1602,7 @@ showChange("0050", s0050);
 showAnalysis("0050", s0050);
 showDailySummary(s2303, s2408, s0050);
 showSystemPicks(data.stocks, previousStocks);
-showMyWatchlist(data.stocks);
+showMyWatchlist(data.stocks, previousStocks);
 showIndustryRanking(data.stocks);
 showIndustryRotation();
 showAttentionSignals(data.stocks);
