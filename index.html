@@ -85,7 +85,33 @@
   margin-top: 20px;
   align-items: start;
 }
+/* 族群情報：雙欄情報區 */
+.intel-dashboard {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  margin-top: 10px;
+  align-items: start;
+}
 
+.intel-dashboard > div {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 18px;
+  min-width: 0;
+}
+
+.intel-dashboard > div p {
+  line-height: 1.7;
+}
+
+/* 手機自動改成單欄 */
+@media (max-width: 760px) {
+  .intel-dashboard {
+    grid-template-columns: 1fr;
+  }
+}
 .pick-section {
   background: #ffffff;
   border: 1px solid #e2e8f0;
@@ -438,7 +464,7 @@ h1 {
   </div>
 
 </div>  
-  
+<div class="intel-dashboard">  
 <div id="industry-ranking" style="margin-top:20px;">
   <strong>🔥 族群強弱排名</strong>
   <p>正在整理族群資料...</p>
@@ -448,7 +474,7 @@ h1 {
   <strong>🔄 產業輪動趨勢</strong>
   <p>正在累積歷史資料...</p>
 </div>
-  
+</div>  
 <div id="attention-signals" style="margin-top:20px;">
   <strong>⚠️ 今日值得注意</strong>
   <p>正在整理值得注意的變化...</p>
