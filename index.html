@@ -326,6 +326,11 @@ h1 {
     <p>正在整理今日市場情報...</p>
   </div>
   
+<div id="system-picks" style="margin-top:20px;">
+  <strong>⭐ 系統精選 3 檔</strong>
+  <p>正在分析 10 檔情報觀察池...</p>
+</div>
+  
 <div id="industry-ranking" style="margin-top:20px;">
   <strong>🔥 族群強弱排名</strong>
   <p>正在整理族群資料...</p>
@@ -670,6 +675,111 @@ function showInstitution(id, value) {
     trust
   };
 }
+function getInformationScore(stock) {
+  const result = getStockScore(stock);
+
+  const percent = result.percent;
+  const foreign = result.foreign;
+  const trust = result.trust;
+  const institutionalNet = foreign + trust;
+
+  let infoScore = 0;
+  const reasons = [];
+
+  // 1. 價格異動：不分漲跌，只看是否值得注意
+  const absPercent = Math.abs(percent);
+
+  if (absPercent >= 5) {
+    infoScore += 3;
+    reasons.push("股價大幅異動 " + percent.toFixed(2) + "%");
+  } else if (absPercent >= 2) {
+    infoScore += 2;
+    reasons.push("股價明顯異動 " + percent.toFixed(2) + "%");
+  } else if (absPercent >= 1) {
+    infoScore += 1;
+    reasons.push("股價出現變化 " + percent.toFixed(2) + "%");
+  }
+
+  // 2. 法人方向一致
+  if (foreign > 0 && trust > 0) {
+    infoScore += 2;
+    reasons.push("外資與投信同步買超");
+  } else if (foreign < 0 && trust < 0) {
+    infoScore += 2;
+    reasons.push("外資與投信同步賣超");
+  }
+
+  // 3. 價格與法人背離
+  if (percent > 0 && institutionalNet < 0) {
+    infoScore += 2;
+    reasons.push("股價上漲但法人合計賣超");
+  } else if (percent < 0 && institutionalNet > 0) {
+    infoScore += 2;
+    reasons.push("股價下跌但法人合計買超");
+  }
+
+  return {
+    infoScore,
+    reasons,
+    percent,
+    institutionalNet
+  };
+}
+function showSystemPicks(stockData) {
+  const el = document.getElementById("system-picks");
+  if (!el) return;
+
+  const picks = Object.keys(stockConfig)
+    .filter(code => stockData[code])
+    .map(code => {
+      const info = getInformationScore(stockData[code]);
+
+      return {
+        code,
+        name: stockConfig[code].name,
+        group: stockConfig[code].group,
+        infoScore: info.infoScore,
+        reasons: info.reasons,
+        percent: info.percent
+      };
+    })
+    .sort((a, b) => {
+      if (b.infoScore !== a.infoScore) {
+        return b.infoScore - a.infoScore;
+      }
+      return Math.abs(b.percent) - Math.abs(a.percent);
+    })
+    .slice(0, 3);
+
+  if (picks.length === 0) {
+    el.innerHTML =
+      "<strong>⭐ 系統精選 3 檔</strong>" +
+      "<p>目前沒有足夠資料。</p>";
+    return;
+  }
+
+  const medals = ["🥇", "🥈", "🥉"];
+
+  let html = "<strong>⭐ 系統精選 3 檔</strong>";
+
+  picks.forEach((item, index) => {
+    const reasonText =
+      item.reasons.length > 0
+        ? item.reasons.join("＋")
+        : "目前無明顯異常訊號";
+
+    html +=
+      "<p>" +
+      medals[index] + " <strong>" +
+      item.name + " " + item.code +
+      "</strong>｜情報值 " + item.infoScore +
+      "<br>族群：" + item.group +
+      "<br>入選原因：" + reasonText +
+      "</p>";
+  });
+
+  el.innerHTML = html;
+}  
 function showAnalysis(code, stock) {
   const result = getStockScore(stock);
 
@@ -1191,6 +1301,7 @@ showAnalysis("2408", s2408);
 showChange("0050", s0050);
 showAnalysis("0050", s0050);
 showDailySummary(s2303, s2408, s0050);
+showSystemPicks(data.stocks);
 showIndustryRanking(data.stocks);
 showIndustryRotation();
 showAttentionSignals(data.stocks);
