@@ -47,6 +47,36 @@
   line-height: 1.7;
   color: #334155;
 }
+/* 我的自選 3 檔－淺色情報卡 */
+.watchlist-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin-top: 8px;
+  margin-bottom: 14px;
+  color: #1e293b;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.watchlist-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 18px;
+  color: #0f172a;
+}
+
+.watchlist-select {
+  padding: 6px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: white;
+  color: #1e293b;
+  font-size: 15px;
+  margin-bottom: 8px;
+}  
 * { box-sizing: border-box; }
 
 body {
@@ -1164,26 +1194,30 @@ function showMyWatchlist(stockData, previousStocks = {}) {
       : "• 今日無明顯訊號";
 
   html +=
-    '<div style="margin-top:6px;">' +
+  "<div class='watchlist-card'>" +
+    "<div class='watchlist-title'>" +
       "<strong>" +
         stockConfig[selectedCode].name + " " + selectedCode +
-        "｜情報值 " + info.infoScore +
       "</strong>" +
-      "<br>族群：" + stockConfig[selectedCode].group +
+      "<span class='info-score'>情報值 " + info.infoScore + "</span>" +
     "</div>" +
 
-    '<div class="pick-block">' +
+    "<div class='pick-group'>族群：" +
+      stockConfig[selectedCode].group +
+    "</div>" +
+
+    "<div class='pick-block'>" +
       "<strong>🎯 核心變化</strong><br>" +
       coreText +
     "</div>" +
 
-    '<div class="pick-block">' +
+    "<div class='pick-block'>" +
       "<strong>📊 今日訊號</strong><br>" +
       signalText +
-    "</div>";
+    "</div>" +
+  "</div>";
 }
        
-
     html += "</div>";
   });
 
