@@ -895,7 +895,7 @@ function showAttentionSignals(stockData) {
   groupScores.length > 0
     ? groupScores.reduce((sum, value) => sum + value, 0) / groupScores.length
     : 0;
-    if (sameGroupStocks.length > 0) {
+    if (sameGroupStocks.length >= 2) {
   const relativeGap = score - groupAverage;
 
   if (relativeGap >= 2) {
