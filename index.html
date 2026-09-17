@@ -1383,6 +1383,78 @@ async function showIndustryRotation() {
       "<p>歷史資料暫時無法讀取。</p>";
   }
 }
+async function showPKRecords() {
+  const el = document.getElementById("pk-records");
+  if (!el) return;
+
+  try {
+    const response = await fetch("pk.json?v=" + Date.now());
+    const data = await response.json();
+    const records = data.records || [];
+
+    if (records.length === 0) {
+      el.innerHTML = "<p>尚無 PK 紀錄，等待第一戰結算。</p>";
+      return;
+    }
+
+    let html = "";
+
+    records.slice().reverse().forEach(record => {
+      const user = record.user || {};
+      const partner = record.partner || {};
+      const benchmark = record.benchmark || {};
+
+      function calcReturn(startPrice, endPrice) {
+        if (!startPrice || !endPrice) return null;
+        return ((endPrice / startPrice) - 1) * 100;
+      }
+
+      function formatReturn(value) {
+        if (value === null) return "進行中";
+        return (value > 0 ? "+" : "") + value.toFixed(2) + "%";
+      }
+
+      const userReturn = calcReturn(user.start_price, user.end_price);
+      const partnerReturn = calcReturn(partner.start_price, partner.end_price);
+      const marketReturn = calcReturn(
+        benchmark.start_price,
+        benchmark.end_price
+      );
+
+      const statusText =
+        record.status === "closed" ? "已結算" : "進行中";
+
+      html +=
+        '<div class="pk-record-card">' +
+          '<div class="pk-record-title">' +
+            '第 ' + record.round + ' 戰　' + statusText +
+          '</div>' +
+
+          '<div class="pk-period">' +
+            record.start_date + ' → ' + record.end_date +
+          '</div>' +
+
+          '<p>👤 <strong>你：</strong>' +
+            (user.stock || "-") +
+            '　<strong>' + formatReturn(userReturn) + '</strong></p>' +
+
+          '<p>🤖 <strong>伙計：</strong>' +
+            (partner.stock || "-") +
+            '　<strong>' + formatReturn(partnerReturn) + '</strong></p>' +
+
+          '<p>📊 <strong>市場基準：</strong>' +
+            (benchmark.stock || "0050") +
+            '　<strong>' + formatReturn(marketReturn) + '</strong></p>' +
+        '</div>';
+    });
+
+    el.innerHTML = html;
+
+  } catch (error) {
+    console.error("讀取 pk.json 失敗：", error);
+    el.innerHTML = "<p>PK 紀錄暫時無法讀取。</p>";
+  }
+}  
 function showAttentionSignals(stockData) {
   const el = document.getElementById("attention-signals");
   if (!el) return;
