@@ -332,37 +332,29 @@ h1 {
     <div class="data-box">
       <div class="label">成交量</div>
       <div class="value" id="volume-2303">--</div>
-                             
-
-
-                             
-
     </div>
 
     <div class="data-box">
-  <div class="label">漲跌幅</div>
-  <div class="value" id="change-2303">--</div>
-</div>
-      
-      
-    
+      <div class="label">漲跌幅</div>
+      <div class="value" id="change-2303">--</div>
+    </div>
   </div>
   <div class="data-row">
-  <div class="data-box">
-    <div class="label">外資</div>
-    <div class="value" id="foreign-2303">--</div>
-  </div>
+    <div class="data-box">
+      <div class="label">外資</div>
+      <div class="value" id="foreign-2303">--</div>
+    </div>
 
-  <div class="data-box">
-    <div class="label">投信</div>
-    <div class="value" id="trust-2303">--</div>
-  </div>
+    <div class="data-box">
+      <div class="label">投信</div>
+      <div class="value" id="trust-2303">--</div>
+    </div>
 
-  <div class="data-box">
-    <div class="label">自營商</div>
-    <div class="value" id="dealer-2303">--</div>
+    <div class="data-box">
+      <div class="label">趨勢</div>
+      <div class="value" id="trend-2303">--</div>
+    </div>
   </div>
-</div>
   <div class="analysis" id="analysis-2303">
     <strong>情報判讀：</strong><br>
     觀察價格趨勢、成交量與法人是否形成一致方向。<br>
@@ -393,27 +385,26 @@ h1 {
 
     <div class="data-box">
       <div class="label">漲跌幅</div>
-<div class="value" id="change-2408">--</div>
-      
+      <div class="value" id="change-2408">--</div>
     </div>
   </div>
 
   <div class="data-row">
-  <div class="data-box">
-    <div class="label">外資</div>
-    <div class="value" id="foreign-2408">--</div>
-  </div>
+    <div class="data-box">
+      <div class="label">外資</div>
+      <div class="value" id="foreign-2408">--</div>
+    </div>
 
-  <div class="data-box">
-    <div class="label">投信</div>
-    <div class="value" id="trust-2408">--</div>
-  </div>
+    <div class="data-box">
+      <div class="label">投信</div>
+      <div class="value" id="trust-2408">--</div>
+    </div>
 
-  <div class="data-box">
-    <div class="label">自營商</div>
-    <div class="value" id="dealer-2408">--</div>
+    <div class="data-box">
+      <div class="label">趨勢</div>
+      <div class="value" id="trend-2408">--</div>
+    </div>
   </div>
-</div>
   <div class="analysis" id="analysis-2408">
     <strong>情報判讀：</strong><br>
     南亞科除了股價，也要注意記憶體報價與產業循環。<br>
@@ -435,39 +426,35 @@ h1 {
     <div class="data-box">
       <div class="label">股價</div>
       <div class="value" id="price-0050">--</div>
-
-
-        
     </div>
 
     <div class="data-box">
-  <div class="label">成交量</div>
-  <div class="value" id="volume-0050">--</div>
-</div>
-      
+      <div class="label">成交量</div>
+      <div class="value" id="volume-0050">--</div>
+    </div>
 
     <div class="data-box">
-  <div class="label">漲跌幅</div>
-  <div class="value" id="change-0050">--</div>
-</div>
+      <div class="label">漲跌幅</div>
+      <div class="value" id="change-0050">--</div>
+    </div>
   </div>
 
   <div class="data-row">
-  <div class="data-box">
-    <div class="label">外資</div>
-    <div class="value" id="foreign-0050">--</div>
-  </div>
+    <div class="data-box">
+      <div class="label">外資</div>
+      <div class="value" id="foreign-0050">--</div>
+    </div>
 
-  <div class="data-box">
-    <div class="label">投信</div>
-    <div class="value" id="trust-0050">--</div>
-  </div>
+    <div class="data-box">
+      <div class="label">投信</div>
+      <div class="value" id="trust-0050">--</div>
+    </div>
 
-  <div class="data-box">
-    <div class="label">自營商</div>
-    <div class="value" id="dealer-0050">--</div>
+    <div class="data-box">
+      <div class="label">趨勢</div>
+      <div class="value" id="trend-0050">--</div>
+    </div>
   </div>
-</div>
   <div class="analysis" id="analysis-0050">
     <strong>情報判讀：</strong><br>
     0050 作為整體市場基準，用來比較個股相對強弱。<br>
@@ -822,6 +809,53 @@ function showInstitution(id, value) {
     el.textContent = "0 股";
   }
 }
+function showTrend(code, currentStock, history, currentTradeDate) {
+  const el = document.getElementById("trend-" + code);
+  if (!el || !currentStock) return;
+
+  const pointsByDate = {};
+
+  Object.keys(history || {}).forEach(date => {
+    const stock = history[date] && history[date].stocks
+      ? history[date].stocks[code]
+      : null;
+    if (stock) pointsByDate[date] = stock;
+  });
+
+  if (currentTradeDate) {
+    pointsByDate[currentTradeDate] = currentStock;
+  }
+
+  const dates = Object.keys(pointsByDate).sort();
+  const recent3 = dates.slice(-3).map(date => pointsByDate[date]);
+  const threeDayStrong =
+    recent3.length === 3 &&
+    recent3.every(stock => getStockScore(stock).score >= 2);
+
+  const prices = dates
+    .map(date => Number(pointsByDate[date].price))
+    .filter(Number.isFinite);
+
+  let seasonText = "季線累積 " + Math.min(prices.length, 60) + "/60";
+  let aboveSeason = false;
+
+  if (prices.length >= 60) {
+    const last60 = prices.slice(-60);
+    const ma60 = last60.reduce((sum, price) => sum + price, 0) / 60;
+    const currentPrice = Number(currentStock.price);
+    aboveSeason = Number.isFinite(currentPrice) && currentPrice >= ma60;
+    seasonText = aboveSeason ? "季線之上" : "季線之下";
+  }
+
+  const shortText = threeDayStrong ? "🔥 連3日轉強" : "未連3日轉強";
+  el.textContent = shortText + "｜" + seasonText;
+
+  if (threeDayStrong || aboveSeason) {
+    el.style.color = "#d32f2f";
+  } else {
+    el.style.color = "#1c1c1e";
+  }
+}
   function getStockScore(stock) {
   const price = Number(stock.price);
   const change = Number(stock.change);
@@ -860,7 +894,6 @@ function getInformationScore(stock) {
   let infoScore = 0;
   const reasons = [];
 
-  // 1. 價格異動：不分漲跌，只看是否值得注意
   const absPercent = Math.abs(percent);
 
   if (absPercent >= 5) {
@@ -874,7 +907,6 @@ function getInformationScore(stock) {
     reasons.push("股價出現變化 " + percent.toFixed(2) + "%");
   }
 
-  // 2. 法人方向一致
   if (foreign > 0 && trust > 0) {
     infoScore += 2;
     reasons.push("外資與投信同步買超");
@@ -883,7 +915,6 @@ function getInformationScore(stock) {
     reasons.push("外資與投信同步賣超");
   }
 
-  // 3. 價格與法人背離
   if (percent > 0 && institutionalNet < 0) {
     infoScore += 2;
     reasons.push("股價上漲但法人合計賣超");
@@ -1797,13 +1828,13 @@ const previousStocks =
       formatVolume(s2303.volume);
 showInstitution("foreign-2303", s2303.foreign);
 showInstitution("trust-2303", s2303.trust);
-showInstitution("dealer-2303", s2303.dealer);
 showInstitution("foreign-2408", s2408.foreign);
 showInstitution("trust-2408", s2408.trust);
-showInstitution("dealer-2408", s2408.dealer);
 showInstitution("foreign-0050", s0050.foreign);
 showInstitution("trust-0050", s0050.trust);
-showInstitution("dealer-0050", s0050.dealer);
+showTrend("2303", s2303, history, currentTradeDate);
+showTrend("2408", s2408, history, currentTradeDate);
+showTrend("0050", s0050, history, currentTradeDate);
     document.getElementById("price-2408").textContent = s2408.price;
     document.getElementById("volume-2408").textContent =
       formatVolume(s2408.volume);
