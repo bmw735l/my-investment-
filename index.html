@@ -398,6 +398,22 @@ h1 {
     </div>
   </div>
 
+  <div class="data-row">
+  <div class="data-box">
+    <div class="label">外資</div>
+    <div class="value" id="foreign-2408">--</div>
+  </div>
+
+  <div class="data-box">
+    <div class="label">投信</div>
+    <div class="value" id="trust-2408">--</div>
+  </div>
+
+  <div class="data-box">
+    <div class="label">自營商</div>
+    <div class="value" id="dealer-2408">--</div>
+  </div>
+</div>
   <div class="analysis" id="analysis-2408">
     <strong>情報判讀：</strong><br>
     南亞科除了股價，也要注意記憶體報價與產業循環。<br>
@@ -436,6 +452,22 @@ h1 {
 </div>
   </div>
 
+  <div class="data-row">
+  <div class="data-box">
+    <div class="label">外資</div>
+    <div class="value" id="foreign-0050">--</div>
+  </div>
+
+  <div class="data-box">
+    <div class="label">投信</div>
+    <div class="value" id="trust-0050">--</div>
+  </div>
+
+  <div class="data-box">
+    <div class="label">自營商</div>
+    <div class="value" id="dealer-0050">--</div>
+  </div>
+</div>
   <div class="analysis" id="analysis-0050">
     <strong>情報判讀：</strong><br>
     0050 作為整體市場基準，用來比較個股相對強弱。<br>
@@ -1766,6 +1798,12 @@ const previousStocks =
 showInstitution("foreign-2303", s2303.foreign);
 showInstitution("trust-2303", s2303.trust);
 showInstitution("dealer-2303", s2303.dealer);
+showInstitution("foreign-2408", s2408.foreign);
+showInstitution("trust-2408", s2408.trust);
+showInstitution("dealer-2408", s2408.dealer);
+showInstitution("foreign-0050", s0050.foreign);
+showInstitution("trust-0050", s0050.trust);
+showInstitution("dealer-0050", s0050.dealer);
     document.getElementById("price-2408").textContent = s2408.price;
     document.getElementById("volume-2408").textContent =
       formatVolume(s2408.volume);
