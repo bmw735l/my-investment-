@@ -1,5 +1,31 @@
 {
   "version": 1,
-  "updated": "",
-  "records": []
+  "updated": "2026-09-17",
+  "records": [
+    {
+      "round": 99,
+      "mode": "user_vs_partner",
+      "status": "open",
+      "start_date": "2026-09-17",
+      "end_date": "2026-09-18",
+
+      "user": {
+        "stock": "測試股票 A",
+        "start_price": 100,
+        "end_price": 105
+      },
+
+      "partner": {
+        "stock": "測試股票 B",
+        "start_price": 200,
+        "end_price": 196
+      },
+
+      "benchmark": {
+        "stock": "0050",
+        "start_price": 100,
+        "end_price": 101
+      }
+    }
+  ]
 }
