@@ -1,0 +1,47 @@
+name: Fix institution display
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-institution-display.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fix only institution display
+        shell: python
+        run: |
+          from pathlib import Path
+          p = Path("index.html")
+          s = p.read_text(encoding="utf-8")
+          for code in ("2408", "0050"):
+              marker = f'  <div class="analysis" id="analysis-{code}">'
+              if s.count(marker) != 1:
+                  raise SystemExit(f"marker error {code}")
+              row = f'''  <div class="data-row">\n  <div class="data-box">\n    <div class="label">外資</div>\n    <div class="value" id="foreign-{code}">--</div>\n  </div>\n\n  <div class="data-box">\n    <div class="label">投信</div>\n    <div class="value" id="trust-{code}">--</div>\n  </div>\n\n  <div class="data-box">\n    <div class="label">自營商</div>\n    <div class="value" id="dealer-{code}">--</div>\n  </div>\n</div>\n'''
+              s = s.replace(marker, row + marker, 1)
+
+          marker = 'showInstitution("dealer-2303", s2303.dealer);'
+          if s.count(marker) != 1:
+              raise SystemExit("load marker error")
+          addition = '''\nshowInstitution("foreign-2408", s2408.foreign);\nshowInstitution("trust-2408", s2408.trust);\nshowInstitution("dealer-2408", s2408.dealer);\nshowInstitution("foreign-0050", s0050.foreign);\nshowInstitution("trust-0050", s0050.trust);\nshowInstitution("dealer-0050", s0050.dealer);'''
+          s = s.replace(marker, marker + addition, 1)
+          p.write_text(s, encoding="utf-8")
+      - name: Verify scope and syntax
+        run: |
+          git diff --check
+          python -c "from pathlib import Path; s=Path('index.html').read_text(); assert all(s.count('id=\"foreign-'+c+'\"')==1 and s.count('id=\"trust-'+c+'\"')==1 and s.count('id=\"dealer-'+c+'\"')==1 for c in ('2303','2408','0050'))"
+          python -c "from pathlib import Path; import re; s=Path('index.html').read_text(); m=re.findall(r'<script>(.*?)</script>',s,re.S); Path('/tmp/dashboard.js').write_text('\n'.join(m))"
+          node --check /tmp/dashboard.js
+      - name: Commit fix
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Show institution data on stock cards"
+          git push
