@@ -1,0 +1,169 @@
+name: Phase 2 signal core migration
+
+on:
+  push:
+    paths:
+      - '.github/workflows/phase2-signal-core.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Consolidate intelligence logic
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          path = Path('index.html')
+          text = path.read_text(encoding='utf-8')
+
+          # 1) Add one shared intelligence core immediately after getInformationScore.
+          marker = '''function showSystemPicks(stockData, previousStocks = {}) {'''
+          if text.count(marker) != 1:
+              raise SystemExit('showSystemPicks marker count is not 1')
+
+          core = r'''function getStockIntelligence(code, stockData, previousStocks = {}) {
+  const stock = stockData[code];
+  if (!stock) {
+    return {
+      infoScore: 0,
+      reasons: [],
+      percent: 0,
+      institutionalNet: 0
+    };
+  }
+
+  const info = getInformationScore(stock);
+  const previousStock = previousStocks[code];
+
+  // 核心變化：法人與個股自身的翻轉，統一在這裡判讀。
+  if (previousStock) {
+    const previousResult = getStockScore(previousStock);
+    const currentResult = getStockScore(stock);
+    const previousNet = previousResult.foreign + previousResult.trust;
+    const currentNet = currentResult.foreign + currentResult.trust;
+
+    if (previousNet < 0 && currentNet > 0) {
+      info.infoScore += 2;
+      info.reasons.push("法人由賣轉買");
+    } else if (previousNet > 0 && currentNet < 0) {
+      info.infoScore += 2;
+      info.reasons.push("法人由買轉賣");
+    }
+
+    if (previousResult.score <= -2 && currentResult.score >= 2) {
+      info.infoScore += 2;
+      info.reasons.push("個股由弱轉強");
+    } else if (previousResult.score >= 2 && currentResult.score <= -2) {
+      info.infoScore += 2;
+      info.reasons.push("個股由強轉弱");
+    }
+  }
+
+  // 族群翻轉只有在族群至少有 3 檔有效樣本時才納入情報值。
+  // 避免用 1～2 檔股票代表整個族群。
+  const config = stockConfig[code];
+  if (config) {
+    const groupCodes = Object.keys(stockConfig).filter(c =>
+      stockConfig[c].group === config.group && stockData[c]
+    );
+
+    if (groupCodes.length >= 3) {
+      const currentRanking = getIndustryRanking(stockData);
+      const previousRanking = getIndustryRanking(previousStocks);
+      const currentGroup = currentRanking.find(item => item.name === config.group);
+      const previousGroup = previousRanking.find(item => item.name === config.group);
+
+      if (currentGroup && previousGroup) {
+        if (previousGroup.score <= -2 && currentGroup.score >= 2) {
+          info.infoScore += 2;
+          info.reasons.push("族群由弱轉強");
+        } else if (previousGroup.score >= 2 && currentGroup.score <= -2) {
+          info.infoScore += 2;
+          info.reasons.push("族群由強轉弱");
+        }
+      }
+    }
+  }
+
+  return info;
+}
+'''
+          text = text.replace(marker, core + marker, 1)
+
+          # 2) System picks now consumes the shared intelligence core.
+          pattern = re.compile(
+              r'''function showSystemPicks\(stockData, previousStocks = \{\}\) \{.*?  const picks = Object\.keys\(stockConfig\)\n    \.filter\(code => stockData\[code\]\)\n    \.map\(code => \{.*?      return \{\n        code,\n        name: stockConfig\[code\]\.name,\n        group: stockConfig\[code\]\.group,\n        infoScore: info\.infoScore,\n        reasons: info\.reasons,\n        percent: info\.percent\n      \};\n    \}\)''',
+              re.S
+          )
+          replacement = '''function showSystemPicks(stockData, previousStocks = {}) {
+  const el = document.getElementById("system-picks");
+  if (!el) return;
+
+  const picks = Object.keys(stockConfig)
+    .filter(code => stockData[code])
+    .map(code => {
+      const info = getStockIntelligence(code, stockData, previousStocks);
+
+      return {
+        code,
+        name: stockConfig[code].name,
+        group: stockConfig[code].group,
+        infoScore: info.infoScore,
+        reasons: info.reasons,
+        percent: info.percent
+      };
+    })'''
+          text, n = pattern.subn(replacement, text, count=1)
+          if n != 1:
+              raise SystemExit(f'showSystemPicks replacement count = {n}')
+
+          # 3) Watchlist uses the same core instead of duplicating flip logic.
+          pattern = re.compile(
+              r'''      const info = getInformationScore\(stock\);\n      const previousStock = previousStocks\[selectedCode\];\n\n    if \(previousStock\) \{.*? \}\n  const coreReasons = info\.reasons\.filter''',
+              re.S
+          )
+          replacement = '''      const info = getStockIntelligence(
+        selectedCode,
+        stockData,
+        previousStocks
+      );
+
+  const coreReasons = info.reasons.filter'''
+          text, n = pattern.subn(replacement, text, count=1)
+          if n != 1:
+              raise SystemExit(f'watchlist replacement count = {n}')
+
+          path.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Validate JavaScript syntax
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          text = Path('index.html').read_text(encoding='utf-8')
+          scripts = re.findall(r'<script>(.*?)</script>', text, re.S)
+          if not scripts:
+              raise SystemExit('No inline script found')
+          Path('/tmp/dashboard.js').write_text('\n'.join(scripts), encoding='utf-8')
+          PY
+          node --check /tmp/dashboard.js
+
+      - name: Commit phase 2 and remove one-time workflow
+        run: |
+          rm .github/workflows/phase2-signal-core.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html .github/workflows/phase2-signal-core.yml
+          git diff --cached --check
+          git commit -m "Consolidate stock intelligence signals"
+          git push
