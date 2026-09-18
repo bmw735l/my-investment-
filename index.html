@@ -1451,45 +1451,13 @@ async function showPKRecords() {
   if (!el) return;
 
   try {
-    const [pkResponse, historyResponse] = await Promise.all([
-      fetch("pk.json?v=" + Date.now()),
-      fetch("history.json?v=" + Date.now())
-    ]);
-    const data = await pkResponse.json();
-    const history = await historyResponse.json();
+    const response = await fetch("pk.json?v=" + Date.now());
+    const data = await response.json();
     const records = data.records || [];
 
     if (records.length === 0) {
       el.innerHTML = "<p>尚無 PK 紀錄，等待第一戰結算。</p>";
       return;
-    }
-
-    function calcReturn(startPrice, endPrice) {
-      if (!startPrice || !endPrice) return null;
-      return ((Number(endPrice) / Number(startPrice)) - 1) * 100;
-    }
-
-    function formatReturn(value) {
-      if (value === null) return "進行中";
-      return (value > 0 ? "+" : "") + value.toFixed(2) + "%";
-    }
-
-    function formatLots(value) {
-      const n = Number(String(value ?? 0).replace(/,/g, ""));
-      if (!Number.isFinite(n)) return "--";
-      const lots = n / 1000;
-      return (lots > 0 ? "+" : "") + Math.round(lots).toLocaleString() + " 張";
-    }
-
-    function signalSnapshot(stock) {
-      if (!stock) return null;
-      const result = getStockScore(stock);
-      return {
-        score: result.score,
-        percent: result.percent,
-        foreign: result.foreign,
-        trust: result.trust
-      };
     }
 
     let html = "";
@@ -1498,86 +1466,55 @@ async function showPKRecords() {
       const user = record.user || {};
       const partner = record.partner || {};
       const benchmark = record.benchmark || {};
-      const signalDate = record.signal_date || record.start_price_date || record.start_date;
-      const signalStocks =
-        history[signalDate] && history[signalDate].stocks
-          ? history[signalDate].stocks
-          : {};
 
-      const userSignal = signalSnapshot(signalStocks[user.code]);
-      const partnerSignal = signalSnapshot(signalStocks[partner.code]);
+      function calcReturn(startPrice, endPrice) {
+        if (!startPrice || !endPrice) return null;
+        return ((endPrice / startPrice) - 1) * 100;
+      }
+
+      function formatReturn(value) {
+        if (value === null) return "進行中";
+        return (value > 0 ? "+" : "") + value.toFixed(2) + "%";
+      }
 
       const userReturn = calcReturn(user.start_price, user.end_price);
       const partnerReturn = calcReturn(partner.start_price, partner.end_price);
-      const marketReturn = calcReturn(benchmark.start_price, benchmark.end_price);
-      const statusText = record.status === "closed" ? "已結算" : "進行中";
+      const marketReturn = calcReturn(
+        benchmark.start_price,
+        benchmark.end_price
+      );
 
-      let signalHtml = "";
-      if (userSignal && partnerSignal) {
-        const scoreDiff = partnerSignal.score - userSignal.score;
-        let differenceText = "起跑訊號接近。";
-
-        if (scoreDiff > 0) {
-          differenceText =
-            "起跑時 " + (partner.stock || "伙計標的") +
-            " 的綜合訊號領先 " + scoreDiff + " 分。";
-        } else if (scoreDiff < 0) {
-          differenceText =
-            "起跑時 " + (user.stock || "你的標的") +
-            " 的綜合訊號領先 " + Math.abs(scoreDiff) + " 分。";
-        }
-
-        const clues = [];
-        if (partnerSignal.trust > 0 && userSignal.trust <= 0) {
-          clues.push("投信方向出現明顯差異");
-        }
-        if (partnerSignal.foreign > userSignal.foreign) {
-          clues.push("外資賣壓相對較輕");
-        }
-        if (partnerSignal.percent > userSignal.percent) {
-          clues.push("價格動能相對較強");
-        }
-
-        signalHtml =
-          '<div class="pk-signal-compare" style="margin-top:12px;padding-top:10px;border-top:1px solid #e5e5ea;">' +
-            '<strong>🔎 起跑訊號差異</strong>' +
-            '<div style="font-size:13px;color:#6e6e73;margin:4px 0 8px;">依 ' + signalDate + ' 收盤資料，不用事後結果倒推</div>' +
-            '<p>👤 ' + (user.stock || "-") +
-              '｜漲跌 ' + userSignal.percent.toFixed(2) + '%' +
-              '｜外資 ' + formatLots(userSignal.foreign) +
-              '｜投信 ' + formatLots(userSignal.trust) +
-              '｜綜合 ' + (userSignal.score > 0 ? "+" : "") + userSignal.score + ' 分</p>' +
-            '<p>🤖 ' + (partner.stock || "-") +
-              '｜漲跌 ' + partnerSignal.percent.toFixed(2) + '%' +
-              '｜外資 ' + formatLots(partnerSignal.foreign) +
-              '｜投信 ' + formatLots(partnerSignal.trust) +
-              '｜綜合 ' + (partnerSignal.score > 0 ? "+" : "") + partnerSignal.score + ' 分</p>' +
-            '<p><strong>事前差異：</strong>' + differenceText +
-              (clues.length ? " " + clues.join("、") + "。" : "") +
-            '</p>' +
-          '</div>';
-      }
+      const statusText =
+        record.status === "closed" ? "已結算" : "進行中";
 
       html +=
         '<div class="pk-record-card">' +
-          '<div class="pk-record-title">第 ' + record.round + ' 戰　' + statusText + '</div>' +
-          '<div class="pk-period">' + record.start_date + ' → ' + record.end_date + '</div>' +
-          '<p>👤 <strong>你：</strong>' + (user.stock || "-") +
-            '　' + user.start_price + ' → ' + (user.end_price || "待收盤") +
+          '<div class="pk-record-title">' +
+            '第 ' + record.round + ' 戰　' + statusText +
+          '</div>' +
+
+          '<div class="pk-period">' +
+            record.start_date + ' → ' + record.end_date +
+          '</div>' +
+
+          '<p>👤 <strong>你：</strong>' +
+            (user.stock || "-") +
             '　<strong>' + formatReturn(userReturn) + '</strong></p>' +
-          '<p>🤖 <strong>伙計：</strong>' + (partner.stock || "-") +
-            '　' + partner.start_price + ' → ' + (partner.end_price || "待收盤") +
+
+          '<p>🤖 <strong>伙計：</strong>' +
+            (partner.stock || "-") +
             '　<strong>' + formatReturn(partnerReturn) + '</strong></p>' +
-          '<p>📊 <strong>市場基準：</strong>' + (benchmark.stock || "0050") +
-            '　' + benchmark.start_price + ' → ' + (benchmark.end_price || "待收盤") +
+
+          '<p>📊 <strong>市場基準：</strong>' +
+            (benchmark.stock || "0050") +
             '　<strong>' + formatReturn(marketReturn) + '</strong></p>' +
-          signalHtml +
         '</div>';
     });
 
     el.innerHTML = html;
+
   } catch (error) {
-    console.error("讀取 PK 紀錄失敗：", error);
+    console.error("讀取 pk.json 失敗：", error);
     el.innerHTML = "<p>PK 紀錄暫時無法讀取。</p>";
   }
 }
