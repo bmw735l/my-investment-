@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated": "2026-09-18 19:01",
+  "updated": "2026-09-18 19:40",
   "records": [
     {
       "round": 1,
@@ -12,20 +12,46 @@
       "user": {
         "code": "2408",
         "stock": "南亞科",
-        "start_price": 493.00,
-        "end_price": 525.00
+        "start_price": 493,
+        "end_price": 525
       },
       "partner": {
         "code": "2303",
         "stock": "聯電",
-        "start_price": 140.50,
-        "end_price": 156.00
+        "start_price": 140.5,
+        "end_price": 156
       },
       "benchmark": {
         "code": "0050",
         "stock": "0050",
-        "start_price": 107.70,
+        "start_price": 107.7,
         "end_price": 109.85
+      }
+    },
+    {
+      "round": 2,
+      "status": "open",
+      "start_date": "2026-09-21",
+      "end_date": "2026-09-24",
+      "signal_date": "2026-09-18",
+      "start_price_date": "2026-09-18",
+      "user": {
+        "code": "2330",
+        "stock": "台積電",
+        "start_price": 2460,
+        "end_price": null
+      },
+      "partner": {
+        "code": "2303",
+        "stock": "聯電",
+        "start_price": 156,
+        "end_price": null
+      },
+      "benchmark": {
+        "code": "0050",
+        "stock": "0050",
+        "start_price": 109.85,
+        "end_price": null
       }
     }
   ]
