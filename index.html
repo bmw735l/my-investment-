@@ -1090,6 +1090,7 @@ function showSystemPicks(stockData, previousStocks = {}) {
     "</div>";
 });
   el.innerHTML = html;
+  return selected;
 }  
 function showAnalysis(code, stock) {
   const result = getStockScore(stock);
@@ -1129,31 +1130,58 @@ function showAnalysis(code, stock) {
   const el = document.getElementById("analysis-" + code);
   if (el) el.innerHTML = message;
 }
-  function showDailySummary(s2303, s2408, s0050) {
+  async function showDailySummary(stockData, systemPicks = []) {
   const el = document.getElementById("daily-summary");
   if (!el) return;
 
+  let latestPK = null;
+
+  try {
+    const response = await fetch("pk.json?v=" + Date.now());
+    const data = await response.json();
+    const records = data.records || [];
+    latestPK =
+      records.slice().reverse().find(record => record.status === "open") ||
+      records[records.length - 1] ||
+      null;
+  } catch (error) {
+    console.error("讀取 pk.json 失敗：", error);
+  }
+
+  const partnerCode = latestPK?.partner?.code;
+  const userCode = latestPK?.user?.code;
+  const systemCode = systemPicks[0]?.code;
+
   const items = [
     {
-      code: "2303",
-      name: "聯電",
-      stock: s2303
+      role: "🤖 伙計選",
+      code: partnerCode,
+      name: partnerCode ? (stockConfig[partnerCode]?.name || latestPK?.partner?.stock || partnerCode) : "-",
+      stock: partnerCode ? stockData[partnerCode] : null
     },
     {
-      code: "2408",
-      name: "南亞科",
-      stock: s2408
+      role: "👤 我選",
+      code: userCode,
+      name: userCode ? (stockConfig[userCode]?.name || latestPK?.user?.stock || userCode) : "-",
+      stock: userCode ? stockData[userCode] : null
     },
     {
-      code: "0050",
-      name: "0050",
-      stock: s0050
+      role: "⭐ 系統選",
+      code: systemCode,
+      name: systemCode ? (stockConfig[systemCode]?.name || systemPicks[0]?.name || systemCode) : "-",
+      stock: systemCode ? stockData[systemCode] : null
     }
   ];
 
   items.forEach(item => {
-    const result = getStockScore(item.stock);
+    if (!item.stock) {
+      item.score = null;
+      item.percent = null;
+      item.signal = "⚪ 無資料";
+      return;
+    }
 
+    const result = getStockScore(item.stock);
     item.score = result.score;
     item.percent = result.percent;
 
@@ -1166,37 +1194,44 @@ function showAnalysis(code, stock) {
     }
   });
 
-  items.sort((a, b) => b.score - a.score);
+  const validItems = items.filter(item => item.score !== null);
+  const bullish = validItems.filter(item => item.score >= 2).length;
+  const bearish = validItems.filter(item => item.score <= -2).length;
 
-  const bullish = items.filter(item => item.score >= 2).length;
-  const bearish = items.filter(item => item.score <= -2).length;
-
-  let marketText = "市場訊號分歧，維持觀察。";
+  let marketText = "三方選股訊號分歧，維持觀察。";
 
   if (bullish >= 2) {
-    marketText = "整體訊號偏多，但仍需留意個股強弱差異。";
+    marketText = "三方選股整體偏多，但仍需留意個股強弱差異。";
   } else if (bearish >= 2) {
-    marketText = "整體訊號偏弱，短線宜提高風險意識。";
+    marketText = "三方選股整體偏弱，短線宜提高風險意識。";
   }
-
-  const medals = ["🥇", "🥈", "🥉"];
 
   let rankingHtml = "";
 
-  items.forEach((item, index) => {
-    const scoreText = item.score > 0 ? "+" + item.score : item.score;
+  items.forEach(item => {
+    const scoreText =
+      item.score === null
+        ? "-"
+        : item.score > 0
+          ? "+" + item.score
+          : item.score;
+
+    const percentText =
+      item.percent === null
+        ? "-"
+        : item.percent.toFixed(2) + "%";
 
     rankingHtml +=
       "<p>" +
-      medals[index] + " <strong>" + item.name + "：</strong>" +
+      "<strong>" + item.role + "｜" + item.name + (item.code ? " " + item.code : "") + "：</strong>" +
       item.signal + "｜" +
       scoreText + " 分｜" +
-      item.percent.toFixed(2) + "%" +
+      percentText +
       "</p>";
   });
 
   el.innerHTML =
-    "<p><strong>今日市場：</strong>" + marketText + "</p>" +
+    "<p><strong>三方選股：</strong>" + marketText + "</p>" +
     rankingHtml;
 }
   
@@ -1861,8 +1896,8 @@ showAnalysis("2408", s2408);
     
 showChange("0050", s0050);
 showAnalysis("0050", s0050);
-showDailySummary(s2303, s2408, s0050);
-showSystemPicks(data.stocks, previousStocks);
+const systemPicks = showSystemPicks(data.stocks, previousStocks);
+showDailySummary(data.stocks, systemPicks);
 showMyWatchlist(data.stocks, previousStocks);
 showIndustryRanking(data.stocks);
 showIndustryRotation();
