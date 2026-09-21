@@ -1561,7 +1561,9 @@ async function showPKRecords() {
             (partner.stock || "-") +
             '　<strong>' + formatReturn(partnerReturn) + '</strong></p>' +
 
-          '<p>📊 <strong>市場基準：</strong>' +
+          '<p>📊 <strong>' +
+            (record.benchmark_label === "系統" ? "系統：" : "市場基準：") +
+            '</strong>' +
             (benchmark.stock || "0050") +
             '　<strong>' + formatReturn(marketReturn) + '</strong></p>' +
         '</div>';
