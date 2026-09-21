@@ -7,7 +7,7 @@
   
 <style>  
   
-/* 系統精選 3 檔卡片－淺色情報版 */
+/* 本週精選 3 檔卡片－淺色情報版 */
 .system-pick-card {
   background: #f8fafc;
   border: 1px solid #e2e8f0;
@@ -483,7 +483,7 @@ h1 {
 <div class="pick-dashboard">
 
   <div id="system-picks" class="pick-section">
-    <strong>⭐ 系統精選 3 檔</strong>
+    <strong>⭐ 本週精選 3 檔</strong>
     <p>正在分析 10 檔情報觀察池...</p>
   </div>
 
@@ -1033,14 +1033,14 @@ function showSystemPicks(stockData, previousStocks = {}) {
 
   if (picks.length === 0) {
     el.innerHTML =
-      "<strong>⭐ 系統精選 3 檔</strong>" +
+      "<strong>⭐ 本週精選 3 檔</strong>" +
       "<p>目前沒有足夠資料。</p>";
     return;
   }
 
   const medals = ["🥇", "🥈", "🥉"];
 
-  let html = "<strong>⭐ 系統精選 3 檔</strong>";
+  let html = "<strong>⭐ 本週精選 3 檔</strong>";
 
   selected.forEach((item, index) => {
   const coreChanges = item.reasons.filter(reason =>
