@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated": "2026-09-18 19:40",
+  "updated": "2026-09-22 00:13",
   "records": [
     {
       "round": 1,
@@ -48,11 +48,12 @@
         "end_price": null
       },
       "benchmark": {
-        "code": "0050",
-        "stock": "0050",
-        "start_price": 109.85,
+        "code": "2344",
+        "stock": "華邦電",
+        "start_price": 179.5,
         "end_price": null
-      }
+      },
+      "benchmark_label": "系統"
     }
   ]
 }
