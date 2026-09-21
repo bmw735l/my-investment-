@@ -314,151 +314,10 @@ h1 {
 </div>
 
 
-<div class="card">
-  <div class="stock-head">
-    <div>
-      <div class="stock-name">聯電</div>
-      <div class="code">2303</div>
-    </div>
-    <div class="signal yellow" id="signal-2303">🟡 觀察</div>
-  </div>
-
-  <div class="data-row">
-    <div class="data-box">
-      <div class="label">股價</div>
-      <div class="value" id="price-2303">--</div>
-    </div>
-
-    <div class="data-box">
-      <div class="label">成交量</div>
-      <div class="value" id="volume-2303">--</div>
-    </div>
-
-    <div class="data-box">
-      <div class="label">漲跌幅</div>
-      <div class="value" id="change-2303">--</div>
-    </div>
-  </div>
-  <div class="data-row">
-    <div class="data-box">
-      <div class="label">外資</div>
-      <div class="value" id="foreign-2303">--</div>
-    </div>
-
-    <div class="data-box">
-      <div class="label">投信</div>
-      <div class="value" id="trust-2303">--</div>
-    </div>
-
-    <div class="data-box">
-      <div class="label">趨勢</div>
-      <div class="value" id="trend-2303">--</div>
-    </div>
-  </div>
-  <div class="analysis" id="analysis-2303">
-    <strong>情報判讀：</strong><br>
-    觀察價格趨勢、成交量與法人是否形成一致方向。<br>
-    🎯 <strong>重點：</strong>不要只看一天漲跌，確認趨勢是否延續。
-  </div>
-</div>
-
-
-<div class="card">
-  <div class="stock-head">
-    <div>
-      <div class="stock-name">南亞科</div>
-      <div class="code">2408</div>
-    </div>
-    <div class="signal yellow" id="signal-2408">🟡 觀察</div>
-  </div>
-
-  <div class="data-row">
-    <div class="data-box">
-      <div class="label">股價</div>
-      <div class="value" id="price-2408">--</div>
-    </div>
-
-    <div class="data-box">
-      <div class="label">DRAM / 成交量</div>
-      <div class="value" id="volume-2408">--</div>
-    </div>
-
-    <div class="data-box">
-      <div class="label">漲跌幅</div>
-      <div class="value" id="change-2408">--</div>
-    </div>
-  </div>
-
-  <div class="data-row">
-    <div class="data-box">
-      <div class="label">外資</div>
-      <div class="value" id="foreign-2408">--</div>
-    </div>
-
-    <div class="data-box">
-      <div class="label">投信</div>
-      <div class="value" id="trust-2408">--</div>
-    </div>
-
-    <div class="data-box">
-      <div class="label">趨勢</div>
-      <div class="value" id="trend-2408">--</div>
-    </div>
-  </div>
-  <div class="analysis" id="analysis-2408">
-    <strong>情報判讀：</strong><br>
-    南亞科除了股價，也要注意記憶體報價與產業循環。<br>
-    🎯 <strong>重點：</strong>價格、量能、DRAM 景氣訊號是否同步。
-  </div>
-</div>
-
-
-<div class="card">
-  <div class="stock-head">
-    <div>
-      <div class="stock-name">元大台灣50</div>
-      <div class="code">0050</div>
-    </div>
-    <div class="signal yellow" id="signal-0050">🟡 觀察</div>
-  </div>
-
-  <div class="data-row">
-    <div class="data-box">
-      <div class="label">股價</div>
-      <div class="value" id="price-0050">--</div>
-    </div>
-
-    <div class="data-box">
-      <div class="label">成交量</div>
-      <div class="value" id="volume-0050">--</div>
-    </div>
-
-    <div class="data-box">
-      <div class="label">漲跌幅</div>
-      <div class="value" id="change-0050">--</div>
-    </div>
-  </div>
-
-  <div class="data-row">
-    <div class="data-box">
-      <div class="label">外資</div>
-      <div class="value" id="foreign-0050">--</div>
-    </div>
-
-    <div class="data-box">
-      <div class="label">投信</div>
-      <div class="value" id="trust-0050">--</div>
-    </div>
-
-    <div class="data-box">
-      <div class="label">趨勢</div>
-      <div class="value" id="trend-0050">--</div>
-    </div>
-  </div>
-  <div class="analysis" id="analysis-0050">
-    <strong>情報判讀：</strong><br>
-    0050 作為整體市場基準，用來比較個股相對強弱。<br>
-    🎯 <strong>重點：</strong>聯電、南亞科能不能跑贏市場。
+<div id="focus-stock-cards">
+  <div class="card">
+    <div class="section-title">🎯 本週焦點 3 檔</div>
+    <p>正在載入 PK 與系統選股...</p>
   </div>
 </div>
 
@@ -798,6 +657,155 @@ if (signal) {
     el.textContent = "— 0.00%";
   }
 }
+function formatInstitutionText(value) {
+  const n = Number(String(value).replace(/,/g, ""));
+  if (!Number.isFinite(n)) return "--";
+  if (n > 0) return "買超 " + (n / 10000).toFixed(1) + " 萬股";
+  if (n < 0) return "賣超 " + Math.abs(n / 10000).toFixed(1) + " 萬股";
+  return "0 股";
+}
+
+function getTrendText(code, currentStock, history, currentTradeDate) {
+  const pointsByDate = {};
+
+  Object.keys(history || {}).forEach(date => {
+    const stock = history[date] && history[date].stocks
+      ? history[date].stocks[code]
+      : null;
+    if (stock) pointsByDate[date] = stock;
+  });
+
+  if (currentTradeDate && currentStock) {
+    pointsByDate[currentTradeDate] = currentStock;
+  }
+
+  const dates = Object.keys(pointsByDate).sort();
+  const recent3 = dates.slice(-3).map(date => pointsByDate[date]);
+  const threeDayStrong =
+    recent3.length === 3 &&
+    recent3.every(stock => getStockScore(stock).score >= 2);
+
+  const prices = dates
+    .map(date => Number(pointsByDate[date].price))
+    .filter(Number.isFinite);
+
+  let seasonText = "季線累積 " + Math.min(prices.length, 60) + "/60";
+
+  if (prices.length >= 60) {
+    const last60 = prices.slice(-60);
+    const ma60 = last60.reduce((sum, price) => sum + price, 0) / 60;
+    const currentPrice = Number(currentStock.price);
+    seasonText =
+      Number.isFinite(currentPrice) && currentPrice >= ma60
+        ? "季線之上"
+        : "季線之下";
+  }
+
+  return (threeDayStrong ? "🔥 連3日轉強" : "未連3日轉強") +
+    "｜" + seasonText;
+}
+
+async function showFocusStockCards(stockData, systemPicks, history, currentTradeDate) {
+  const el = document.getElementById("focus-stock-cards");
+  if (!el) return;
+
+  let latestPK = null;
+
+  try {
+    const response = await fetch("pk.json?v=" + Date.now());
+    const data = await response.json();
+    const records = data.records || [];
+    latestPK =
+      records.slice().reverse().find(record => record.status === "open") ||
+      records[records.length - 1] ||
+      null;
+  } catch (error) {
+    console.error("讀取 pk.json 失敗：", error);
+  }
+
+  const focus = [
+    {
+      role: "🤖 伙計 PK",
+      code: latestPK?.partner?.code,
+      fallbackName: latestPK?.partner?.stock
+    },
+    {
+      role: "👤 我的 PK",
+      code: latestPK?.user?.code,
+      fallbackName: latestPK?.user?.stock
+    },
+    {
+      role: "⭐ 系統選",
+      code: systemPicks?.[0]?.code,
+      fallbackName: systemPicks?.[0]?.name
+    }
+  ].filter(item => item.code && stockData[item.code]);
+
+  if (focus.length === 0) {
+    el.innerHTML =
+      '<div class="card"><div class="section-title">🎯 本週焦點 3 檔</div>' +
+      '<p>目前沒有足夠資料。</p></div>';
+    return;
+  }
+
+  el.innerHTML = focus.map(item => {
+    const stock = stockData[item.code];
+    const result = getStockScore(stock);
+    const name = stockConfig[item.code]?.name || item.fallbackName || item.code;
+    const signal =
+      result.score >= 2 ? "🟢 偏多" :
+      result.score <= -2 ? "🔴 偏空" :
+      "🟡 觀察";
+    const changeText =
+      (result.percent > 0 ? "▲ " : result.percent < 0 ? "▼ " : "") +
+      Math.abs(result.percent).toFixed(2) + "%";
+    const analysis =
+      result.score >= 2
+        ? "整體訊號偏多，觀察正向籌碼是否延續。"
+        : result.score <= -2
+          ? "整體訊號偏弱，注意法人賣壓與價格續弱風險。"
+          : "價格與法人訊號尚未形成明確方向，維持觀察。";
+
+    return (
+      '<div class="card">' +
+        '<div style="font-weight:700; margin-bottom:10px;">' + item.role + '</div>' +
+        '<div class="stock-head">' +
+          '<div><div class="stock-name">' + name + '</div>' +
+          '<div class="code">' + item.code + '</div></div>' +
+          '<div class="signal ' +
+            (result.score >= 2 ? "green" : result.score <= -2 ? "red" : "yellow") +
+            '">' + signal + '</div>' +
+        '</div>' +
+        '<div class="data-row">' +
+          '<div class="data-box"><div class="label">股價</div><div class="value">' +
+            stock.price + '</div></div>' +
+          '<div class="data-box"><div class="label">成交量</div><div class="value">' +
+            formatVolume(stock.volume) + '</div></div>' +
+          '<div class="data-box"><div class="label">漲跌幅</div><div class="value">' +
+            changeText + '</div></div>' +
+        '</div>' +
+        '<div class="data-row">' +
+          '<div class="data-box"><div class="label">外資</div><div class="value">' +
+            formatInstitutionText(stock.foreign) + '</div></div>' +
+          '<div class="data-box"><div class="label">投信</div><div class="value">' +
+            formatInstitutionText(stock.trust) + '</div></div>' +
+          '<div class="data-box"><div class="label">趨勢</div><div class="value">' +
+            getTrendText(item.code, stock, history, currentTradeDate) + '</div></div>' +
+        '</div>' +
+        '<div class="analysis"><strong>情報判讀：</strong><br>' +
+          '綜合評分 ' + (result.score > 0 ? "+" : "") + result.score + ' 分。' +
+          '股價 ' + (result.percent >= 0 ? "上漲 " : "下跌 ") +
+          Math.abs(result.percent).toFixed(2) + '%，外資' +
+          (result.foreign > 0 ? "買超" : result.foreign < 0 ? "賣超" : "持平") +
+          '，投信' +
+          (result.trust > 0 ? "買超" : result.trust < 0 ? "賣超" : "持平") +
+          '。<br>🎯 <strong>重點：</strong>' + analysis +
+        '</div>' +
+      '</div>'
+    );
+  }).join("");
+}
+
 function showInstitution(id, value) {
   const el = document.getElementById(id);
   if (!el) return;
@@ -1864,39 +1872,14 @@ const previousStocks =
   previousTradeDate && history[previousTradeDate]
     ? history[previousTradeDate].stocks
     : {};
-    const s2303 = data.stocks["2303"];
-    const s2408 = data.stocks["2408"];
-    const s0050 = data.stocks["0050"];
+    const systemPicks = showSystemPicks(data.stocks, previousStocks);
+    await showFocusStockCards(
+      data.stocks,
+      systemPicks,
+      history,
+      currentTradeDate
+    );
 
-    document.getElementById("price-2303").textContent = s2303.price;
-    document.getElementById("volume-2303").textContent =
-      formatVolume(s2303.volume);
-showInstitution("foreign-2303", s2303.foreign);
-showInstitution("trust-2303", s2303.trust);
-showInstitution("foreign-2408", s2408.foreign);
-showInstitution("trust-2408", s2408.trust);
-showInstitution("foreign-0050", s0050.foreign);
-showInstitution("trust-0050", s0050.trust);
-showTrend("2303", s2303, history, currentTradeDate);
-showTrend("2408", s2408, history, currentTradeDate);
-showTrend("0050", s0050, history, currentTradeDate);
-    document.getElementById("price-2408").textContent = s2408.price;
-    document.getElementById("volume-2408").textContent =
-      formatVolume(s2408.volume);
-
-    document.getElementById("price-0050").textContent = s0050.price;
-    document.getElementById("volume-0050").textContent =
-  formatVolume(s0050.volume);
-
-showChange("2303", s2303);
-showAnalysis("2303", s2303);
-    
-showChange("2408", s2408);
-showAnalysis("2408", s2408);
-    
-showChange("0050", s0050);
-showAnalysis("0050", s0050);
-const systemPicks = showSystemPicks(data.stocks, previousStocks);
 showDailySummary(data.stocks, systemPicks);
 showMyWatchlist(data.stocks, previousStocks);
 showIndustryRanking(data.stocks);
