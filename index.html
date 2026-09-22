@@ -739,9 +739,9 @@ async function showFocusStockCards(stockData, systemPicks, history, currentTrade
       fallbackName: latestPK?.user?.stock
     },
     {
-      role: "⭐ 系統選",
-      code: systemPicks?.[0]?.code,
-      fallbackName: systemPicks?.[0]?.name
+      role: "⭐ 系統 PK",
+      code: latestPK?.benchmark?.code || systemPicks?.[0]?.code,
+      fallbackName: latestPK?.benchmark?.stock || systemPicks?.[0]?.name
     }
   ].filter(item => item.code && stockData[item.code]);
 
