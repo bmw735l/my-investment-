@@ -714,7 +714,7 @@ function getSixLayerAnalysis(code, stock, stockData, previousStocks, history, cu
                    relativeDiff <= -1 ? "明顯弱於0050" : "略弱於0050";
 
   const technical = getTechnicalTurnSignal(code, stock, history, currentTradeDate, stockData);
-  const price = (current.percent > 0 ? "+" : "") + current.percent.toFixed(2) + "%（±1%為方向門檻）";
+  const price = (current.percent > 0 ? "+" : "") + current.percent.toFixed(2) + "%（±2%為方向門檻）";
 
   return { industry, institution, chip, relative, technical, price };
 }
@@ -888,9 +888,9 @@ function showTrend(code, currentStock, history, currentTradeDate) {
 
   let score = 0;
 
-  // 價格層：依情報站新規則，±1% 即視為方向變化
-  if (percent >= 1) score += 2;
-  else if (percent <= -1) score -= 2;
+  // 價格層：±2% 才視為明確方向變化
+  if (percent >= 2) score += 2;
+  else if (percent <= -2) score -= 2;
 
   if (foreign > 0) score += 1;
   else if (foreign < 0) score -= 1;
