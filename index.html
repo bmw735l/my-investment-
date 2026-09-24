@@ -606,6 +606,119 @@ function getTrendText(code, currentStock, history, currentTradeDate) {
     "｜" + seasonText;
 }
 
+
+// 技術轉折訊號：不是追已經大漲，而是抓「行為先變、價格尚未完全反映」
+function getTechnicalTurnSignal(code, currentStock, history, currentTradeDate, stockData) {
+  const points = [];
+  Object.keys(history || {}).sort().forEach(date => {
+    const st = history[date]?.stocks?.[code];
+    if (st) points.push({ date, stock: st });
+  });
+  if (currentTradeDate && currentStock && !points.some(p => p.date === currentTradeDate)) {
+    points.push({ date: currentTradeDate, stock: currentStock });
+  }
+
+  const recent = points.slice(-4);
+  if (recent.length < 2) {
+    return { score: 0, label: "⚪ 累積中", reasons: ["歷史資料不足"] };
+  }
+
+  const cur = recent[recent.length - 1].stock;
+  const prev = recent[recent.length - 2].stock;
+  const curResult = getStockScore(cur);
+  const prevResult = getStockScore(prev);
+  const curNet = curResult.foreign + curResult.trust;
+  const prevNet = prevResult.foreign + prevResult.trust;
+  const curVol = Number(cur.volume);
+  const prevVol = Number(prev.volume);
+  const prices = recent.map(p => Number(p.stock.price)).filter(Number.isFinite);
+  const recentLow = prices.length > 1 ? Math.min(...prices.slice(0, -1)) : NaN;
+
+  let score = 0;
+  const reasons = [];
+
+  // 籌碼先轉：最重要的早期訊號
+  if (prevNet < 0 && curNet > 0) {
+    score += 2;
+    reasons.push("法人由賣轉買");
+  } else if (prevNet > 0 && curNet < 0) {
+    score -= 1;
+    reasons.push("法人由買轉賣");
+  }
+
+  // 跌時量縮：賣壓可能正在退
+  if (curResult.percent <= 0 && Number.isFinite(curVol) && Number.isFinite(prevVol) && curVol < prevVol) {
+    score += 1;
+    reasons.push("回檔量縮，賣壓降溫");
+  }
+
+  // 價格沒有再破近期低點
+  if (Number.isFinite(recentLow) && Number(cur.price) >= recentLow) {
+    score += 1;
+    reasons.push("價格守住近期低點");
+  }
+
+  // 相對大盤開始變強
+  const market = stockData?.["0050"];
+  if (market) {
+    const marketPct = getStockScore(market).percent;
+    if (curResult.percent > marketPct) {
+      score += 1;
+      reasons.push("相對0050轉強");
+    }
+  }
+
+  // 已經噴太多就不把它當「早期轉折」
+  if (curResult.percent > 4) {
+    score -= 2;
+    reasons.push("當日漲幅已大，非早期訊號");
+  }
+
+  const label = score >= 3 ? "🟢 技術轉折增強" :
+                score >= 1 ? "🟡 技術轉折萌芽" :
+                score <= -2 ? "🔴 技術轉折轉弱" : "⚪ 尚未確認";
+  return { score, label, reasons };
+}
+
+function getSixLayerAnalysis(code, stock, stockData, previousStocks, history, currentTradeDate) {
+  const config = stockConfig[code] || {};
+  const current = getStockScore(stock);
+  const previous = previousStocks?.[code] ? getStockScore(previousStocks[code]) : null;
+  const currentGroup = getIndustryRanking(stockData).find(x => x.name === config.group);
+  const previousGroup = getIndustryRanking(previousStocks || {}).find(x => x.name === config.group);
+
+  let industry = "族群資料累積中";
+  if (currentGroup) {
+    if (previousGroup && currentGroup.score > previousGroup.score) industry = "族群動能改善";
+    else if (previousGroup && currentGroup.score < previousGroup.score) industry = "族群動能降溫";
+    else industry = "族群動能持平";
+  }
+
+  const currentNet = current.foreign + current.trust;
+  const previousNet = previous ? previous.foreign + previous.trust : null;
+  let institution = currentNet > 0 ? "法人合計買超" : currentNet < 0 ? "法人合計賣超" : "法人中性";
+  if (previousNet !== null && previousNet < 0 && currentNet > 0) institution += "｜由賣轉買";
+  if (previousNet !== null && previousNet > 0 && currentNet < 0) institution += "｜由買轉賣";
+
+  let chip = "籌碼方向未明";
+  if (current.foreign > 0 && current.trust > 0) chip = "外資、投信同步偏多";
+  else if (current.foreign < 0 && current.trust < 0) chip = "外資、投信同步偏空";
+  else if (currentNet > 0) chip = "多空分歧但合計偏買";
+  else if (currentNet < 0) chip = "多空分歧但合計偏賣";
+
+  const market = stockData?.["0050"];
+  const marketPct = market ? getStockScore(market).percent : 0;
+  const relativeDiff = current.percent - marketPct;
+  const relative = relativeDiff >= 1 ? "明顯強於0050" :
+                   relativeDiff > 0 ? "略強於0050" :
+                   relativeDiff <= -1 ? "明顯弱於0050" : "略弱於0050";
+
+  const technical = getTechnicalTurnSignal(code, stock, history, currentTradeDate, stockData);
+  const price = (current.percent > 0 ? "+" : "") + current.percent.toFixed(2) + "%（±1%為方向門檻）";
+
+  return { industry, institution, chip, relative, technical, price };
+}
+
 async function showFocusStockCards(stockData, systemPicks, history, currentTradeDate) {
   const el = document.getElementById("focus-stock-cards");
   if (!el) return;
@@ -668,6 +781,20 @@ async function showFocusStockCards(stockData, systemPicks, history, currentTrade
           '<div class="data-box"><div class="label">趨勢</div><div class="value">' +
             getTrendText(item.code, stock, history, currentTradeDate) + '</div></div>' +
         '</div>' +
+        (() => {
+          const dates = Object.keys(history || {}).sort();
+          const prevDate = dates.filter(d => d < currentTradeDate).slice(-1)[0];
+          const previousStocks = prevDate ? history[prevDate]?.stocks || {} : {};
+          const six = getSixLayerAnalysis(item.code, stock, stockData, previousStocks, history, currentTradeDate);
+          const techReasons = six.technical.reasons.slice(0, 3).join("、");
+          return '<div class="analysis"><strong>🧭 六層判讀</strong><br>' +
+            '① 產業變化｜' + six.industry + '<br>' +
+            '② 法人/資金｜' + six.institution + '<br>' +
+            '③ 籌碼變化｜' + six.chip + '<br>' +
+            '④ 相對強弱｜' + six.relative + '<br>' +
+            '⑤ 技術面確認｜' + six.technical.label + (techReasons ? '｜' + techReasons : '') + '<br>' +
+            '⑥ 價格｜' + six.price + '</div>';
+        })() +
         '<div class="analysis"><strong>情報判讀：</strong><br>' +
           '綜合評分 ' + (result.score > 0 ? "+" : "") + result.score + ' 分。' +
           '股價 ' + (result.percent >= 0 ? "上漲 " : "下跌 ") +
@@ -761,8 +888,9 @@ function showTrend(code, currentStock, history, currentTradeDate) {
 
   let score = 0;
 
-  if (percent >= 2) score += 2;
-  else if (percent <= -2) score -= 2;
+  // 價格層：依情報站新規則，±1% 即視為方向變化
+  if (percent >= 1) score += 2;
+  else if (percent <= -1) score -= 2;
 
   if (foreign > 0) score += 1;
   else if (foreign < 0) score -= 1;
@@ -824,7 +952,7 @@ function getInformationScore(stock) {
     institutionalNet
   };
 }
-function showSystemPicks(stockData, previousStocks = {}) {
+function showSystemPicks(stockData, previousStocks = {}, history = {}, currentTradeDate = null) {
   const el = document.getElementById("system-picks");
   if (!el) return;
   const currentRanking = getIndustryRanking(stockData);
@@ -887,6 +1015,14 @@ function showSystemPicks(stockData, previousStocks = {}) {
         info.reasons.push("個股由強轉弱");
         }
       }
+      const technicalTurn = getTechnicalTurnSignal(code, stockData[code], history, currentTradeDate, stockData);
+      if (technicalTurn.score >= 3) {
+        info.infoScore += 2;
+        info.reasons.push("技術轉折增強");
+      } else if (technicalTurn.score >= 1) {
+        info.infoScore += 1;
+        info.reasons.push("技術轉折萌芽");
+      }
       return {
         code,
         name: stockConfig[code].name,
@@ -931,7 +1067,8 @@ function showSystemPicks(stockData, previousStocks = {}) {
     reason.includes("由弱轉強") ||
     reason.includes("由強轉弱") ||
     reason.includes("由賣轉買") ||
-    reason.includes("由買轉賣")
+    reason.includes("由買轉賣") ||
+    reason.includes("技術轉折")
   );
 
   const todaySignals = item.reasons.filter(reason =>
@@ -1077,7 +1214,7 @@ function showIndustryRanking(stockData) {
 
   el.innerHTML = html;
 }
-function showMyWatchlist(stockData, previousStocks = {}) {
+function showMyWatchlist(stockData, previousStocks = {}, history = {}, currentTradeDate = null) {
   const el = document.getElementById("my-watchlist");
   if (!el) return;
 
@@ -1163,7 +1300,8 @@ function showMyWatchlist(stockData, previousStocks = {}) {
     reason.includes("由弱轉強") ||
     reason.includes("由強轉弱") ||
     reason.includes("由賣轉買") ||
-    reason.includes("由買轉賣")
+    reason.includes("由買轉賣") ||
+    reason.includes("技術轉折")
   );
 
   const todayReasons = info.reasons.filter(reason =>
@@ -1193,6 +1331,17 @@ function showMyWatchlist(stockData, previousStocks = {}) {
       stockConfig[selectedCode].group +
     "</div>" +
 
+    (() => {
+      const six = getSixLayerAnalysis(selectedCode, stock, stockData, previousStocks, history, currentTradeDate);
+      const techReasons = six.technical.reasons.slice(0, 3).join("、");
+      return "<div class='pick-block'><strong>🧭 六層判讀</strong><br>" +
+        "① 產業變化｜" + six.industry + "<br>" +
+        "② 法人/資金｜" + six.institution + "<br>" +
+        "③ 籌碼變化｜" + six.chip + "<br>" +
+        "④ 相對強弱｜" + six.relative + "<br>" +
+        "⑤ 技術面確認｜" + six.technical.label + (techReasons ? "｜" + techReasons : "") + "<br>" +
+        "⑥ 價格｜" + six.price + "</div>";
+    })() +
     "<div class='pick-block'>" +
       "<strong>🎯 核心變化</strong><br>" +
       coreText +
@@ -1226,7 +1375,7 @@ function showMyWatchlist(stockData, previousStocks = {}) {
       updated[index] = newCode;
       localStorage.setItem("myWatchlist", JSON.stringify(updated));
 
-      showMyWatchlist(stockData, previousStocks);
+      showMyWatchlist(stockData, previousStocks, history, currentTradeDate);
     });
   });
 }  
@@ -1832,7 +1981,7 @@ const previousStocks =
   previousTradeDate && history[previousTradeDate]
     ? history[previousTradeDate].stocks
     : {};
-    const systemPicks = showSystemPicks(data.stocks, previousStocks);
+    const systemPicks = showSystemPicks(data.stocks, previousStocks, history, currentTradeDate);
     await showFocusStockCards(
       data.stocks,
       systemPicks,
@@ -1842,7 +1991,7 @@ const previousStocks =
 
 showDailySummary(data.stocks, systemPicks);
 showThousandRadar(data.stocks);
-showMyWatchlist(data.stocks, previousStocks);
+showMyWatchlist(data.stocks, previousStocks, history, currentTradeDate);
 showIndustryRanking(data.stocks);
 showIndustryRotation();
 showPKRecords();
