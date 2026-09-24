@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "updated": "2026-09-22 00:13",
+  "updated": "2026-09-24 15:06",
   "records": [
     {
       "round": 1,
@@ -30,7 +30,7 @@
     },
     {
       "round": 2,
-      "status": "open",
+      "status": "closed",
       "start_date": "2026-09-21",
       "end_date": "2026-09-24",
       "signal_date": "2026-09-18",
@@ -39,19 +39,19 @@
         "code": "2330",
         "stock": "台積電",
         "start_price": 2460,
-        "end_price": null
+        "end_price": 2475
       },
       "partner": {
         "code": "2303",
         "stock": "聯電",
         "start_price": 156,
-        "end_price": null
+        "end_price": 153
       },
       "benchmark": {
         "code": "2344",
         "stock": "華邦電",
         "start_price": 179.5,
-        "end_price": null
+        "end_price": 171.5
       },
       "benchmark_label": "系統"
     }
