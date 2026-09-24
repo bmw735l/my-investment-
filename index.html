@@ -344,6 +344,13 @@ h1 {
   </div>
 </div>
 
+<div class="card">
+  <div class="section-title">👑 發現千金股</div>
+  <div id="thousand-radar">
+    <p>正在尋找接近千元、且開始出現 AI 題材與資金變化的股票...</p>
+  </div>
+</div>
+
 <div id="focus-stock-cards">
   <div class="card">
     <div class="section-title">🔎 系統發現 3 檔</div>
@@ -1654,6 +1661,87 @@ function showAttentionSignals(stockData) {
     });
   }  
 }
+function showThousandRadar(stockData) {
+  const el = document.getElementById("thousand-radar");
+  if (!el) return;
+
+  const radarConfig = {
+    "3189": { name: "景碩", theme: "AI / ABF 載板" },
+    "2357": { name: "華碩", theme: "AI PC / AI 伺服器" }
+  };
+
+  const candidates = Object.keys(radarConfig)
+    .map(code => {
+      const stock = stockData[code];
+      if (!stock) return null;
+
+      const price = Number(stock.price);
+      const change = Number(stock.change);
+      const previousPrice = price - change;
+      const percent =
+        Number.isFinite(price) && Number.isFinite(previousPrice) && previousPrice !== 0
+          ? (change / previousPrice) * 100
+          : 0;
+      const foreign = Number(String(stock.foreign).replace(/,/g, ""));
+      const trust = Number(String(stock.trust).replace(/,/g, ""));
+      const distance = Number.isFinite(price) ? ((1000 - price) / 1000) * 100 : 999;
+
+      return {
+        code,
+        ...radarConfig[code],
+        price,
+        percent,
+        foreign,
+        trust,
+        distance
+      };
+    })
+    .filter(Boolean)
+    .filter(item => item.price >= 850 && item.price < 1000)
+    .sort((a, b) => a.distance - b.distance);
+
+  if (candidates.length === 0) {
+    el.innerHTML =
+      "<p><strong>雷達條件：</strong>850～999 元、AI 題材，觀察價格接近千元時是否同時出現法人與趨勢轉強。</p>" +
+      "<p>目前候選資料正在累積；不是找已經成為千金股的股票，而是找可能在之前先被發現的變化。</p>";
+    return;
+  }
+
+  let html =
+    "<p><strong>雷達目的：</strong>不是追千金股，而是在跨過 1000 元之前先看到訊號。</p>";
+
+  candidates.forEach(item => {
+    const foreignText =
+      item.foreign > 0 ? "外資買超" :
+      item.foreign < 0 ? "外資賣超" : "外資持平";
+    const trustText =
+      item.trust > 0 ? "投信買超" :
+      item.trust < 0 ? "投信賣超" : "投信持平";
+    const distanceText = Math.max(0, item.distance).toFixed(1);
+
+    html +=
+      '<div class="system-pick-card">' +
+        '<div class="pick-title">👑 ' + item.name + ' ' + item.code +
+          '<span class="info-score">距千元 ' + distanceText + '%</span></div>' +
+        '<div class="pick-group">題材：' + item.theme + '</div>' +
+        '<div class="pick-block"><strong>股價：</strong>' +
+          item.price.toFixed(2) + '｜今日 ' +
+          (item.percent > 0 ? "+" : "") + item.percent.toFixed(2) + '%</div>' +
+        '<div class="pick-block"><strong>籌碼：</strong>' +
+          foreignText + '｜' + trustText + '</div>' +
+        '<div class="pick-block"><strong>🎯 發現：</strong>' +
+          (item.percent >= 2 && item.foreign > 0
+            ? "價格與外資同步轉強，列為優先追蹤。"
+            : item.foreign > 0 && item.trust > 0
+              ? "外資與投信同步偏多，觀察價格是否進一步確認。"
+              : "已進入準千金區，等待價格與法人訊號形成共振。") +
+        '</div>' +
+      '</div>';
+  });
+
+  el.innerHTML = html;
+}
+
   async function loadStockData() {
   try {
     const response = await fetch("stocks.json?v=" + Date.now());
@@ -1682,7 +1770,7 @@ const previousStocks =
       currentTradeDate
     );
 
-showDailySummary(data.stocks, systemPicks);
+showDailySummary(data.stocks, systemPicks);\nshowThousandRadar(data.stocks);
 showMyWatchlist(data.stocks, previousStocks);
 showIndustryRanking(data.stocks);
 showIndustryRotation();
