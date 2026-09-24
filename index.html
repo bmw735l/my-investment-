@@ -1306,6 +1306,16 @@ async function showIndustryRotation() {
       "<p>歷史資料暫時無法讀取。</p>";
   }
 }
+function calcPKReturn(startPrice, endPrice) {
+  if (!startPrice || !endPrice) return null;
+  return ((endPrice / startPrice) - 1) * 100;
+}
+
+function formatPKReturn(value) {
+  if (value === null) return "進行中";
+  return (value > 0 ? "+" : "") + value.toFixed(2) + "%";
+}
+
 async function showPKRecords() {
   const el = document.getElementById("pk-records");
   if (!el) return;
@@ -1320,26 +1330,85 @@ async function showPKRecords() {
       return;
     }
 
-    let html = "";
+    const closedRecords = records.filter(record => record.status === "closed");
+
+    let userWins = 0;
+    let partnerWins = 0;
+    let thirdWins = 0;
+    let userTotal = 0;
+    let partnerTotal = 0;
+    let thirdTotal = 0;
+
+    const tableRows = closedRecords.map(record => {
+      const userReturn = calcPKReturn(record.user?.start_price, record.user?.end_price);
+      const partnerReturn = calcPKReturn(record.partner?.start_price, record.partner?.end_price);
+      const thirdReturn = calcPKReturn(record.benchmark?.start_price, record.benchmark?.end_price);
+
+      if (userReturn !== null) userTotal += userReturn;
+      if (partnerReturn !== null) partnerTotal += partnerReturn;
+      if (thirdReturn !== null) thirdTotal += thirdReturn;
+
+      const values = [
+        { key: "user", value: userReturn },
+        { key: "partner", value: partnerReturn },
+        { key: "third", value: thirdReturn }
+      ].filter(item => item.value !== null);
+
+      const best = values.length
+        ? Math.max(...values.map(item => item.value))
+        : null;
+
+      const winners = values.filter(item => item.value === best).map(item => item.key);
+      if (winners.length === 1) {
+        if (winners[0] === "user") userWins += 1;
+        if (winners[0] === "partner") partnerWins += 1;
+        if (winners[0] === "third") thirdWins += 1;
+      }
+
+      const thirdLabel = record.benchmark_label === "系統"
+        ? "⭐ " + (record.benchmark?.stock || "系統")
+        : "📊 " + (record.benchmark?.stock || "0050");
+
+      return (
+        "<tr>" +
+          "<td>第 " + record.round + " 戰</td>" +
+          "<td>👤 " + (record.user?.stock || "-") + "<br><strong>" + formatPKReturn(userReturn) + "</strong></td>" +
+          "<td>🤖 " + (record.partner?.stock || "-") + "<br><strong>" + formatPKReturn(partnerReturn) + "</strong></td>" +
+          "<td>" + thirdLabel + "<br><strong>" + formatPKReturn(thirdReturn) + "</strong></td>" +
+        "</tr>"
+      );
+    }).join("");
+
+    let html =
+      '<div style="overflow-x:auto; margin-bottom:22px;">' +
+        '<div style="font-weight:700; font-size:20px; margin-bottom:10px;">📈 PK 累積表</div>' +
+        '<table style="width:100%; border-collapse:collapse; min-width:620px; text-align:center;">' +
+          '<thead><tr style="background:#f7f9fc;">' +
+            '<th style="padding:10px; border:1px solid #e2e8f0;">戰次</th>' +
+            '<th style="padding:10px; border:1px solid #e2e8f0;">👤 我</th>' +
+            '<th style="padding:10px; border:1px solid #e2e8f0;">🤖 伙計</th>' +
+            '<th style="padding:10px; border:1px solid #e2e8f0;">📊 第三方</th>' +
+          '</tr></thead>' +
+          '<tbody>' + tableRows +
+            '<tr style="background:#f8fafc;">' +
+              '<td style="padding:10px; border:1px solid #e2e8f0;"><strong>累計</strong></td>' +
+              '<td style="padding:10px; border:1px solid #e2e8f0;"><strong>' + formatPKReturn(userTotal) + '</strong><br>勝 ' + userWins + ' 場</td>' +
+              '<td style="padding:10px; border:1px solid #e2e8f0;"><strong>' + formatPKReturn(partnerTotal) + '</strong><br>勝 ' + partnerWins + ' 場</td>' +
+              '<td style="padding:10px; border:1px solid #e2e8f0;"><strong>' + formatPKReturn(thirdTotal) + '</strong><br>勝 ' + thirdWins + ' 場</td>' +
+            '</tr>' +
+          '</tbody>' +
+        '</table>' +
+        '<div style="font-size:15px; color:#64748b; margin-top:8px;">累計報酬＝各戰報酬率加總；每一戰仍獨立結算。</div>' +
+      '</div>';
 
     records.slice().reverse().forEach(record => {
       const user = record.user || {};
       const partner = record.partner || {};
       const benchmark = record.benchmark || {};
 
-      function calcReturn(startPrice, endPrice) {
-        if (!startPrice || !endPrice) return null;
-        return ((endPrice / startPrice) - 1) * 100;
-      }
-
-      function formatReturn(value) {
-        if (value === null) return "進行中";
-        return (value > 0 ? "+" : "") + value.toFixed(2) + "%";
-      }
-
-      const userReturn = calcReturn(user.start_price, user.end_price);
-      const partnerReturn = calcReturn(partner.start_price, partner.end_price);
-      const marketReturn = calcReturn(
+      const userReturn = calcPKReturn(user.start_price, user.end_price);
+      const partnerReturn = calcPKReturn(partner.start_price, partner.end_price);
+      const marketReturn = calcPKReturn(
         benchmark.start_price,
         benchmark.end_price
       );
@@ -1359,17 +1428,17 @@ async function showPKRecords() {
 
           '<p>👤 <strong>你：</strong>' +
             (user.stock || "-") +
-            '　<strong>' + formatReturn(userReturn) + '</strong></p>' +
+            '　<strong>' + formatPKReturn(userReturn) + '</strong></p>' +
 
           '<p>🤖 <strong>伙計：</strong>' +
             (partner.stock || "-") +
-            '　<strong>' + formatReturn(partnerReturn) + '</strong></p>' +
+            '　<strong>' + formatPKReturn(partnerReturn) + '</strong></p>' +
 
           '<p>📊 <strong>' +
             (record.benchmark_label === "系統" ? "系統：" : "市場基準：") +
             '</strong>' +
             (benchmark.stock || "0050") +
-            '　<strong>' + formatReturn(marketReturn) + '</strong></p>' +
+            '　<strong>' + formatPKReturn(marketReturn) + '</strong></p>' +
         '</div>';
     });
 
