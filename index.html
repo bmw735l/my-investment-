@@ -320,8 +320,8 @@ h1 {
 
 <div id="focus-stock-cards">
   <div class="card">
-    <div class="section-title">🎯 本週焦點 3 檔</div>
-    <p>正在載入 PK 與系統選股...</p>
+    <div class="section-title">🔎 系統發現 3 檔</div>
+    <p>正在從情報觀察池找出最值得注意的變化...</p>
   </div>
 </div>
 
@@ -592,41 +592,16 @@ async function showFocusStockCards(stockData, systemPicks, history, currentTrade
   const el = document.getElementById("focus-stock-cards");
   if (!el) return;
 
-  let latestPK = null;
-
-  try {
-    const response = await fetch("pk.json?v=" + Date.now());
-    const data = await response.json();
-    const records = data.records || [];
-    latestPK =
-      records.slice().reverse().find(record => record.status === "open") ||
-      records[records.length - 1] ||
-      null;
-  } catch (error) {
-    console.error("讀取 pk.json 失敗：", error);
-  }
-
-  const focus = [
-    {
-      role: "🤖 伙計 PK",
-      code: latestPK?.partner?.code,
-      fallbackName: latestPK?.partner?.stock
-    },
-    {
-      role: "👤 我的 PK",
-      code: latestPK?.user?.code,
-      fallbackName: latestPK?.user?.stock
-    },
-    {
-      role: "⭐ 系統 PK",
-      code: latestPK?.benchmark?.code || systemPicks?.[0]?.code,
-      fallbackName: latestPK?.benchmark?.stock || systemPicks?.[0]?.name
-    }
-  ].filter(item => item.code && stockData[item.code]);
+  const medals = ["🥇", "🥈", "🥉"];
+  const focus = (systemPicks || []).slice(0, 3).map((item, index) => ({
+    role: medals[index] + " 系統發現",
+    code: item.code,
+    fallbackName: item.name
+  }));
 
   if (focus.length === 0) {
     el.innerHTML =
-      '<div class="card"><div class="section-title">🎯 本週焦點 3 檔</div>' +
+      '<div class="card"><div class="section-title">🔎 系統發現 3 檔</div>' +
       '<p>目前沒有足夠資料。</p></div>';
     return;
   }
@@ -1025,105 +1000,36 @@ function showAnalysis(code, stock) {
   const el = document.getElementById("daily-summary");
   if (!el) return;
 
-  let latestPK = null;
+  const medals = ["🥇", "🥈", "🥉"];
+  const items = (systemPicks || []).slice(0, 3);
 
-  try {
-    const response = await fetch("pk.json?v=" + Date.now());
-    const data = await response.json();
-    const records = data.records || [];
-    latestPK =
-      records.slice().reverse().find(record => record.status === "open") ||
-      records[records.length - 1] ||
-      null;
-  } catch (error) {
-    console.error("讀取 pk.json 失敗：", error);
+  if (items.length === 0) {
+    el.innerHTML = "<p>目前沒有足夠資料形成今日發現。</p>";
+    return;
   }
 
-  const partnerCode = latestPK?.partner?.code;
-  const userCode = latestPK?.user?.code;
-  const systemCode = systemPicks[0]?.code;
+  let html =
+    "<p><strong>🔎 系統今日發現：</strong>從情報觀察池濃縮 3 檔，重點看正在發生的變化，不追逐已經發生的漲跌。</p>";
 
-  const items = [
-    {
-      role: "🤖 伙計選",
-      code: partnerCode,
-      name: partnerCode ? (stockConfig[partnerCode]?.name || latestPK?.partner?.stock || partnerCode) : "-",
-      stock: partnerCode ? stockData[partnerCode] : null
-    },
-    {
-      role: "👤 我選",
-      code: userCode,
-      name: userCode ? (stockConfig[userCode]?.name || latestPK?.user?.stock || userCode) : "-",
-      stock: userCode ? stockData[userCode] : null
-    },
-    {
-      role: "⭐ 系統選",
-      code: systemCode,
-      name: systemCode ? (stockConfig[systemCode]?.name || systemPicks[0]?.name || systemCode) : "-",
-      stock: systemCode ? stockData[systemCode] : null
-    }
-  ];
+  items.forEach((item, index) => {
+    const stock = stockData[item.code];
+    if (!stock) return;
 
-  items.forEach(item => {
-    if (!item.stock) {
-      item.score = null;
-      item.percent = null;
-      item.signal = "⚪ 無資料";
-      return;
-    }
-
-    const result = getStockScore(item.stock);
-    item.score = result.score;
-    item.percent = result.percent;
-
-    if (item.score >= 2) {
-      item.signal = "🟢 偏多";
-    } else if (item.score <= -2) {
-      item.signal = "🔴 偏空";
-    } else {
-      item.signal = "🟡 觀察";
-    }
-  });
-
-  const validItems = items.filter(item => item.score !== null);
-  const bullish = validItems.filter(item => item.score >= 2).length;
-  const bearish = validItems.filter(item => item.score <= -2).length;
-
-  let marketText = "三方選股訊號分歧，維持觀察。";
-
-  if (bullish >= 2) {
-    marketText = "三方選股整體偏多，但仍需留意個股強弱差異。";
-  } else if (bearish >= 2) {
-    marketText = "三方選股整體偏弱，短線宜提高風險意識。";
-  }
-
-  let rankingHtml = "";
-
-  items.forEach(item => {
-    const scoreText =
-      item.score === null
-        ? "-"
-        : item.score > 0
-          ? "+" + item.score
-          : item.score;
+    const result = getStockScore(stock);
+    const signal =
+      result.score >= 2 ? "🟢 偏多" :
+      result.score <= -2 ? "🔴 偏空" :
+      "🟡 觀察";
 
     const percentText =
-      item.percent === null
-        ? "-"
-        : item.percent.toFixed(2) + "%";
+      (result.percent > 0 ? "+" : "") + result.percent.toFixed(2) + "%";
 
-    rankingHtml +=
-      "<p>" +
-      "<strong>" + item.role + "｜" + item.name + (item.code ? " " + item.code : "") + "：</strong>" +
-      item.signal + "｜" +
-      scoreText + " 分｜" +
-      percentText +
-      "</p>";
+    html +=
+      "<p><strong>" + medals[index] + " " + item.name + " " + item.code + "：</strong>" +
+      signal + "｜情報值 " + item.infoScore + "｜" + percentText + "</p>";
   });
 
-  el.innerHTML =
-    "<p><strong>三方選股：</strong>" + marketText + "</p>" +
-    rankingHtml;
+  el.innerHTML = html;
 }
   
 function showIndustryRanking(stockData) {
