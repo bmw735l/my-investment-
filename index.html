@@ -399,6 +399,8 @@ h1 {
 <div class="card">
   <div class="section-title">🏆 PK 紀錄</div>
 
+  <div id="pk-ownership"><p>正在載入PK三檔集保籌碼...</p></div>
+
   <div id="pk-records">
     <p>正在載入 PK 紀錄...</p>
   </div>
@@ -416,6 +418,7 @@ h1 {
 </div>
 
 </div>
+<script src="ownership.js"></script>
 <script>
 const stockConfig = {
   "2303": {
@@ -1995,6 +1998,7 @@ showMyWatchlist(data.stocks, previousStocks, history, currentTradeDate);
 showIndustryRanking(data.stocks);
 showIndustryRotation();
 showPKRecords();
+showPKOwnership(data.stocks, history, currentTradeDate);
 showAttentionSignals(data.stocks);
 updateEntryCalculator(data.stocks);
 showTradeRecords();    
