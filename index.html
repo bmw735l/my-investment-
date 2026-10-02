@@ -366,6 +366,13 @@ h1 {
 </div>
 
 <div class="card">
+  <div class="section-title">📡 第11–100檔候選觀察池</div>
+  <div id="secondary-watchlist">
+    <p>正在載入第二層雷達...</p>
+  </div>
+</div>
+
+<div class="card">
   <div class="section-title">🔄 族群與輪動</div>
 
   <div class="intel-dashboard">
@@ -479,6 +486,15 @@ const stockConfig = {
   name: "台達電",
   industry: "電子",
   group: "AI電源"
+  }
+};
+
+const secondaryWatchlistConfig = {
+  "6278": {
+    name: "台表科",
+    industry: "電子",
+    group: "SMT／AI伺服器／光通訊／DDR5",
+    note: "第二層雷達：觀察法人連續性、融資變化與AI/光通訊/DDR5成長是否形成共振"
   }
 };
   function getIndustryRanking(stockData) {
@@ -1964,6 +1980,39 @@ function showThousandRadar(stockData) {
   el.innerHTML = html;
 }
 
+function showSecondaryWatchlist(stockData) {
+  const el = document.getElementById("secondary-watchlist");
+  if (!el) return;
+
+  const rows = Object.entries(secondaryWatchlistConfig).map(([code, config]) => {
+    const stock = stockData?.[code];
+    if (!stock) {
+      return '<div class="watchlist-card"><div class="watchlist-title"><strong>' +
+        config.name + ' ' + code + '</strong><span class="info-score">第11–100檔</span></div>' +
+        '<div class="pick-group">' + config.group + '</div>' +
+        '<div class="pick-block">等待下一次正式盤後資料更新後開始追蹤。</div></div>';
+    }
+
+    const r = getStockScore(stock);
+    const direction = r.percent >= 2 ? "🟢 價格轉強" :
+                      r.percent <= -2 ? "🔴 價格轉弱" : "🟡 價格觀察";
+    return '<div class="watchlist-card"><div class="watchlist-title"><strong>' +
+      config.name + ' ' + code + '</strong><span class="info-score">第11–100檔</span></div>' +
+      '<div class="pick-group">' + config.group + '</div>' +
+      '<div class="data-row">' +
+        '<div class="data-box"><div class="label">收盤</div><div class="value">' + stock.price + '</div></div>' +
+        '<div class="data-box"><div class="label">漲跌</div><div class="value">' +
+          (r.percent > 0 ? "+" : "") + r.percent.toFixed(2) + '%</div></div>' +
+        '<div class="data-box"><div class="label">方向</div><div class="value">' + direction + '</div></div>' +
+      '</div>' +
+      '<div class="pick-block">外資：' + formatInstitutionText(stock.foreign) +
+      '｜投信：' + formatInstitutionText(stock.trust) +
+      '<br>觀察理由：' + config.note + '</div></div>';
+  });
+
+  el.innerHTML = rows.join("");
+}
+
   async function loadStockData() {
   try {
     const response = await fetch("stocks.json?v=" + Date.now());
@@ -1995,6 +2044,7 @@ const previousStocks =
 showDailySummary(data.stocks, systemPicks);
 showThousandRadar(data.stocks);
 showMyWatchlist(data.stocks, previousStocks, history, currentTradeDate);
+showSecondaryWatchlist(data.stocks);
 showIndustryRanking(data.stocks);
 showIndustryRotation();
 showPKRecords();
