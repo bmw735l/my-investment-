@@ -349,13 +349,7 @@ h1 {
 
   <div id="one-line-intel" style="margin:14px 0 20px; padding:16px 18px; border:1px solid #dbe4ee; border-radius:14px; background:#f8fafc; line-height:1.7;">
     <div style="font-weight:700; margin-bottom:8px;">🧭 今日一句話情報</div>
-    <div style="font-size:0.96em; margin-bottom:8px;"><strong>昨日｜</strong>強勢集中在聯電與聯發科，記憶體續弱，台積電籌碼轉弱。</div>
-    <div style="font-size:1.12em; font-weight:700; margin-bottom:10px;"><strong>今日｜</strong>昨日弱勢的記憶體出現資金回補，台積電重新接棒；但市場廣度沒有同步轉強，資金仍在高檔快速輪動。</div>
-    <div style="font-size:0.96em;">
-      <div>• 權值：台積電 +1.63% 收 2500 元，重新成為指數上攻主力。</div>
-      <div>• 記憶體：南亞科 +3.62%、華邦電 +0.88%，外資買超前十同時出現南亞科與華邦電。</div>
-      <div>• 發現：指數創收盤新高，但上市下跌家數仍多於上漲家數；強勢尚未全面擴散。</div>
-    </div>
+    <div style="font-size:0.96em;">正在依最新盤後資料整理...</div>
   </div>
 
   <div id="daily-summary" style="display:none;">
@@ -1225,6 +1219,85 @@ function showAnalysis(code, stock) {
   const el = document.getElementById("analysis-" + code);
   if (el) el.innerHTML = message;
 }
+function showOneLineIntel(stockData, previousStocks = {}) {
+  const el = document.getElementById("one-line-intel");
+  if (!el) return;
+
+  const rows = Object.entries(stockData || {}).map(([code, stock]) => {
+    const result = getStockScore(stock);
+    return { code, stock, ...result };
+  }).filter(row => Number.isFinite(row.percent));
+
+  if (rows.length === 0) {
+    el.innerHTML = '<div style="font-weight:700; margin-bottom:8px;">🧭 今日一句話情報</div>' +
+      '<div style="font-size:0.96em;">目前沒有足夠資料形成摘要。</div>';
+    return;
+  }
+
+  const formatPct = value => (value > 0 ? "+" : "") + value.toFixed(2) + "%";
+  const institutionLabel = row => {
+    const net = row.foreign + row.trust;
+    return net > 0 ? "法人合計買超" : net < 0 ? "法人合計賣超" : "法人合計持平";
+  };
+  const strongest = [...rows].sort((a, b) => b.percent - a.percent)[0];
+  const weakest = [...rows].sort((a, b) => a.percent - b.percent)[0];
+  const rising = rows.filter(row => row.percent > 0).length;
+  const falling = rows.filter(row => row.percent < 0).length;
+  const flat = rows.length - rising - falling;
+
+  const previousRows = Object.entries(previousStocks || {}).map(([code, stock]) => {
+    const result = getStockScore(stock);
+    return { code, stock, ...result };
+  }).filter(row => Number.isFinite(row.percent));
+  const previousStrongest = [...previousRows].sort((a, b) => b.percent - a.percent)[0];
+  const yesterdayText = previousStrongest
+    ? "情報池以" + previousStrongest.stock.name + " " + formatPct(previousStrongest.percent) + "最強。"
+    : "尚無足夠的前一交易日資料可比較。";
+
+  const market = stockData["0050"] ? { stock: stockData["0050"], ...getStockScore(stockData["0050"]) } : null;
+  const tsmc = stockData["2330"] ? { stock: stockData["2330"], ...getStockScore(stockData["2330"]) } : null;
+  const nanya = stockData["2408"] ? { stock: stockData["2408"], ...getStockScore(stockData["2408"]) } : null;
+  const winbond = stockData["2344"] ? { stock: stockData["2344"], ...getStockScore(stockData["2344"]) } : null;
+
+  const flatText = flat > 0 ? "、持平 " + flat + " 檔" : "";
+  const breadthText = rising > falling
+    ? "情報池上漲 " + rising + " 檔、多於下跌 " + falling + " 檔" + flatText + "，強勢有擴散。"
+    : rising < falling
+      ? "情報池上漲 " + rising + " 檔、少於下跌 " + falling + " 檔" + flatText + "，強勢尚未全面擴散。"
+      : "情報池漲跌各 " + rising + " 檔" + flatText + "，盤面多空分歧。";
+  const leaderText = strongest.percent > 0
+    ? "強勢集中在" + strongest.stock.name
+    : "情報池沒有收紅標的，跌幅相對較小的是" + strongest.stock.name;
+  const todayText = leaderText + "，弱勢端為" + weakest.stock.name +
+    "；" + breadthText.replace("情報池", "觀察範圍內");
+
+  const marketLine = market
+    ? "• 大盤代理：0050 " + formatPct(market.percent) + "，收 " + Number(market.stock.price).toFixed(2) +
+      " 元，" + institutionLabel(market) + "。"
+    : "• 大盤代理：0050 資料尚未取得。";
+  const weightLine = tsmc
+    ? "• 權值：台積電 " + formatPct(tsmc.percent) + "，收 " + Number(tsmc.stock.price).toFixed(2) +
+      " 元，" + institutionLabel(tsmc) + "。"
+    : "• 權值：台積電資料尚未取得。";
+  const memoryParts = [nanya, winbond].filter(Boolean).map(row =>
+    row.stock.name + " " + formatPct(row.percent) + "（" + institutionLabel(row) + "）"
+  );
+  const memoryLine = memoryParts.length
+    ? "• 記憶體：" + memoryParts.join("、") + "。"
+    : "• 記憶體：資料尚未取得。";
+
+  el.innerHTML =
+    '<div style="font-weight:700; margin-bottom:8px;">🧭 今日一句話情報</div>' +
+    '<div style="font-size:0.96em; margin-bottom:8px;"><strong>昨日｜</strong>' + yesterdayText + '</div>' +
+    '<div style="font-size:1.12em; font-weight:700; margin-bottom:10px;"><strong>今日｜</strong>' + todayText + '</div>' +
+    '<div style="font-size:0.96em;">' +
+      '<div>' + marketLine + '</div>' +
+      '<div>' + weightLine + '</div>' +
+      '<div>' + memoryLine + '</div>' +
+      '<div>• 發現：' + breadthText + '</div>' +
+    '</div>';
+}
+
   async function showDailySummary(stockData, systemPicks = []) {
   const el = document.getElementById("daily-summary");
   if (!el) return;
@@ -2207,6 +2280,7 @@ const previousStocks =
     ? history[previousTradeDate].stocks
     : {};
     const systemPicks = showSystemPicks(data.stocks, previousStocks, history, currentTradeDate);
+    showOneLineIntel(data.stocks, previousStocks);
     await showFocusStockCards(
       data.stocks,
       systemPicks,
