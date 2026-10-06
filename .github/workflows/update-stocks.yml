@@ -3,7 +3,8 @@ name: Update Stock Data
 on:
   workflow_dispatch:
   schedule:
-    - cron: '30 10 * * 1-5'
+    # 台北時間 16:00，在收盤與法人資料公布後更新
+    - cron: '0 8 * * 1-5'
 
 permissions:
   contents: write
