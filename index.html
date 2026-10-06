@@ -290,6 +290,25 @@ h1 {
 #attention-signals { font-size: 18px; line-height: 1.7; }
 .analysis { font-size: 18px; }
 #focus-stock-cards { margin-top: 18px; }
+
+/* PK 技術分析卡：趨勢 → 勝率 → 指標確認 */
+.pk-technical-intro { margin:18px 0 12px; color:#475569; line-height:1.7; }
+.pk-technical-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; margin-bottom:24px; }
+.pk-technical-card { border:1px solid #e2e8f0; border-radius:16px; padding:16px; background:#f8fafc; min-width:0; }
+.pk-technical-head { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:12px; }
+.pk-technical-name { font-size:21px; font-weight:750; color:#0f172a; }
+.pk-technical-code { color:#64748b; font-size:15px; }
+.pk-tech-status { flex:0 0 auto; padding:5px 10px; border-radius:999px; font-weight:750; font-size:15px; }
+.pk-tech-attack { background:#dcfce7; color:#166534; }
+.pk-tech-wait { background:#dbeafe; color:#1d4ed8; }
+.pk-tech-defend { background:#ffedd5; color:#c2410c; }
+.pk-tech-invalid { background:#fee2e2; color:#b91c1c; }
+.pk-tech-gate { padding:9px 0; border-top:1px solid #e2e8f0; line-height:1.55; color:#334155; }
+.pk-tech-gate:first-of-type { border-top:0; }
+.pk-tech-gate strong { color:#0f172a; }
+.pk-tech-levels { margin-top:10px; padding-top:10px; border-top:1px dashed #cbd5e1; color:#475569; font-size:16px; }
+.pk-tech-summary { margin-top:10px; padding:10px 12px; border-radius:10px; background:#fff; color:#1e293b; line-height:1.55; }
+@media(max-width:860px) { .pk-technical-grid { grid-template-columns:1fr; } }
 </style>
 </head>
 
@@ -414,6 +433,10 @@ h1 {
   <div class="section-title">🏆 PK 紀錄</div>
 
   <div id="pk-ownership"><p>正在載入PK三檔集保籌碼...</p></div>
+
+  <div id="pk-technical-cards">
+    <p>正在載入PK三檔技術分析...</p>
+  </div>
 
   <div id="pk-records">
     <p>正在載入 PK 紀錄...</p>
@@ -1516,6 +1539,62 @@ function formatPKReturn(value) {
   return (value > 0 ? "+" : "") + value.toFixed(2) + "%";
 }
 
+function getPKTechnicalStatusMeta(status) {
+  const map = {
+    attack: { label: "🟢 攻擊", className: "pk-tech-attack" },
+    wait: { label: "🔵 等待", className: "pk-tech-wait" },
+    defend: { label: "🟠 防守", className: "pk-tech-defend" },
+    invalid: { label: "🔴 失效", className: "pk-tech-invalid" }
+  };
+  return map[status] || map.wait;
+}
+
+function escapePKTechnicalText(value) {
+  return String(value ?? "-")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function renderPKTechnicalCards(technicalCards, technicalDate) {
+  const el = document.getElementById("pk-technical-cards");
+  if (!el) return;
+
+  if (!Array.isArray(technicalCards) || technicalCards.length === 0) {
+    el.innerHTML = '<div class="pk-technical-intro"><strong>📐 PK技術分析卡</strong><br>' +
+      '本戰尚未建立技術快照；結論將依趨勢、位置、K棒、均線、成交量與指標判讀。</div>';
+    return;
+  }
+
+  const cards = technicalCards.map(card => {
+    const meta = getPKTechnicalStatusMeta(card.status);
+    const support = card.support ? escapePKTechnicalText(card.support) : "-";
+    const resistance = card.resistance ? escapePKTechnicalText(card.resistance) : "-";
+
+    return '<article class="pk-technical-card">' +
+      '<div class="pk-technical-head">' +
+        '<div><div class="pk-technical-name">' + escapePKTechnicalText(card.stock) + '</div>' +
+        '<div class="pk-technical-code">' + escapePKTechnicalText(card.code) + '</div></div>' +
+        '<span class="pk-tech-status ' + meta.className + '">' + meta.label + '</span>' +
+      '</div>' +
+      '<div class="pk-tech-gate"><strong>① 方向關｜趨勢</strong><br>' + escapePKTechnicalText(card.trend) + '</div>' +
+      '<div class="pk-tech-gate"><strong>② 勝率關｜位置・K棒・均線・量價</strong><br>' +
+        escapePKTechnicalText(card.position) + '；' + escapePKTechnicalText(card.kbar) + '；' +
+        escapePKTechnicalText(card.ma) + '；' + escapePKTechnicalText(card.volume) + '</div>' +
+      '<div class="pk-tech-gate"><strong>③ 確認關｜指標</strong><br>' + escapePKTechnicalText(card.indicator) + '</div>' +
+      '<div class="pk-tech-levels"><strong>支撐：</strong>' + support + '　<strong>壓力：</strong>' + resistance + '</div>' +
+      '<div class="pk-tech-summary"><strong>盤感：</strong>' + escapePKTechnicalText(card.summary) + '</div>' +
+    '</article>';
+  }).join("");
+
+  el.innerHTML = '<div class="pk-technical-intro"><strong>📐 PK技術分析卡</strong>' +
+    (technicalDate ? '　<span style="font-size:15px;">快照：' + escapePKTechnicalText(technicalDate) + '</span>' : '') +
+    '<br>順序固定：先判斷趨勢，再看位置與量價，最後才用指標確認。</div>' +
+    '<div class="pk-technical-grid">' + cards + '</div>';
+}
+
 async function showPKRecords() {
   const el = document.getElementById("pk-records");
   if (!el) return;
@@ -1524,6 +1603,8 @@ async function showPKRecords() {
     const response = await fetch("pk.json?v=" + Date.now());
     const data = await response.json();
     const records = data.records || [];
+
+    renderPKTechnicalCards(data.technical_cards, data.technical_snapshot_date);
 
     if (records.length === 0) {
       el.innerHTML = "<p>尚無 PK 紀錄，等待第一戰結算。</p>";
@@ -2113,7 +2194,6 @@ showMyWatchlist(data.stocks, previousStocks, history, currentTradeDate);
 showSecondaryWatchlist(data.stocks);
 showIndustryRanking(data.stocks);
 showIndustryRotation();
-showPKRecords();
 showPKOwnership(data.stocks, history, currentTradeDate);
 showAttentionSignals(data.stocks);
 updateEntryCalculator(data.stocks);
@@ -2126,6 +2206,7 @@ showTradeRecords();
   }
 }
 
+showPKRecords();
 loadStockData();
 </script>
 </body>
