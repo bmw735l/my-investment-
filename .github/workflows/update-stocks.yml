@@ -22,6 +22,7 @@ jobs:
           python3 <<'PY'
           import json
           import urllib.request
+          import time
           from datetime import datetime, timezone, timedelta
 
           taipei = timezone(timedelta(hours=8))
@@ -53,19 +54,33 @@ jobs:
                   f"STOCK_DAY?stockNo={code}&response=json"
               )
 
-              req = urllib.request.Request(url, headers=headers)
+              rows = []
+              last_error = None
 
-              with urllib.request.urlopen(req, timeout=30) as response:
-                  stock_data = json.loads(
-                      response.read().decode("utf-8")
-                  )
+              # TWSE 偶爾會對連續查詢回傳空資料；逐檔重試，避免一檔拖垮全站。
+              for attempt in range(4):
+                  try:
+                      req = urllib.request.Request(url, headers=headers)
 
-              rows = stock_data.get("data", [])
+                      with urllib.request.urlopen(req, timeout=30) as response:
+                          stock_data = json.loads(
+                              response.read().decode("utf-8")
+                          )
+
+                      rows = stock_data.get("data", [])
+                      if rows:
+                          break
+                  except Exception as exc:
+                      last_error = exc
+
+                  time.sleep(1.5 * (attempt + 1))
 
               if not rows:
-                  raise RuntimeError(
-                      f"{code} {name}: STOCK_DAY 沒有取得行情資料"
+                  print(
+                      f"WARNING: {code} {name}: STOCK_DAY 連續重試後仍無資料"
+                      + (f" ({last_error})" if last_error else "")
                   )
+                  continue
 
               # 最後一筆 = API 回傳的最新交易日
               row = rows[-1]
@@ -99,6 +114,9 @@ jobs:
                   "trust": "--",
                   "dealer": "--"
               }
+
+              # 降低連續呼叫官方端點時的暫時性限流。
+              time.sleep(0.35)
 
           # -------------------------------------------------
           # 2. 所有股票必須屬於同一交易日
