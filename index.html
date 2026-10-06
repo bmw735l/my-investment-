@@ -1604,14 +1604,29 @@ async function showPKRecords() {
     const data = await response.json();
     const records = data.records || [];
 
+    let latestStocks = {};
+    try {
+      const stockResponse = await fetch("stocks.json?v=" + Date.now());
+      const stockPayload = await stockResponse.json();
+      latestStocks = stockPayload.stocks || {};
+    } catch (stockError) {
+      console.warn("讀取最新盤後價失敗，進行中戰次暫不試算：", stockError);
+    }
+
+    const participantEndPrice = (record, participant) => {
+      if (record.status === "closed") return participant?.end_price;
+      const livePrice = latestStocks[participant?.code]?.price;
+      return livePrice === undefined || livePrice === "--"
+        ? participant?.end_price
+        : Number(String(livePrice).replaceAll(",", ""));
+    };
+
     renderPKTechnicalCards(data.technical_cards, data.technical_snapshot_date);
 
     if (records.length === 0) {
       el.innerHTML = "<p>尚無 PK 紀錄，等待第一戰結算。</p>";
       return;
     }
-
-    const closedRecords = records.filter(record => record.status === "closed");
 
     let userWins = 0;
     let partnerWins = 0;
@@ -1620,14 +1635,15 @@ async function showPKRecords() {
     let partnerTotal = 0;
     let thirdTotal = 0;
 
-    const tableRows = closedRecords.map(record => {
-      const userReturn = calcPKReturn(record.user?.start_price, record.user?.end_price);
-      const partnerReturn = calcPKReturn(record.partner?.start_price, record.partner?.end_price);
-      const thirdReturn = calcPKReturn(record.benchmark?.start_price, record.benchmark?.end_price);
+    const tableRows = records.map(record => {
+      const isClosed = record.status === "closed";
+      const userReturn = calcPKReturn(record.user?.start_price, participantEndPrice(record, record.user));
+      const partnerReturn = calcPKReturn(record.partner?.start_price, participantEndPrice(record, record.partner));
+      const thirdReturn = calcPKReturn(record.benchmark?.start_price, participantEndPrice(record, record.benchmark));
 
-      if (userReturn !== null) userTotal += userReturn;
-      if (partnerReturn !== null) partnerTotal += partnerReturn;
-      if (thirdReturn !== null) thirdTotal += thirdReturn;
+      if (isClosed && userReturn !== null) userTotal += userReturn;
+      if (isClosed && partnerReturn !== null) partnerTotal += partnerReturn;
+      if (isClosed && thirdReturn !== null) thirdTotal += thirdReturn;
 
       const values = [
         { key: "user", value: userReturn },
@@ -1635,7 +1651,7 @@ async function showPKRecords() {
         { key: "third", value: thirdReturn }
       ].filter(item => item.value !== null);
 
-      const best = values.length
+      const best = isClosed && values.length
         ? Math.max(...values.map(item => item.value))
         : null;
 
@@ -1652,7 +1668,7 @@ async function showPKRecords() {
 
       return (
         "<tr>" +
-          "<td>第 " + record.round + " 戰</td>" +
+          "<td>第 " + record.round + " 戰" + (isClosed ? "" : "<br><small>進行中</small>") + "</td>" +
           "<td>👤 " + (record.user?.stock || "-") + "<br><strong>" + formatPKReturn(userReturn) + "</strong></td>" +
           "<td>🤖 " + (record.partner?.stock || "-") + "<br><strong>" + formatPKReturn(partnerReturn) + "</strong></td>" +
           "<td>" + thirdLabel + "<br><strong>" + formatPKReturn(thirdReturn) + "</strong></td>" +
@@ -1679,7 +1695,7 @@ async function showPKRecords() {
             '</tr>' +
           '</tbody>' +
         '</table>' +
-        '<div style="font-size:15px; color:#64748b; margin-top:8px;">累計報酬＝各戰報酬率加總；每一戰仍獨立結算。</div>' +
+        '<div style="font-size:15px; color:#64748b; margin-top:8px;">累計報酬只計已結算戰次；進行中依最新盤後價試算，每一戰仍獨立結算。</div>' +
       '</div>';
 
     records.slice().reverse().forEach(record => {
@@ -1687,11 +1703,11 @@ async function showPKRecords() {
       const partner = record.partner || {};
       const benchmark = record.benchmark || {};
 
-      const userReturn = calcPKReturn(user.start_price, user.end_price);
-      const partnerReturn = calcPKReturn(partner.start_price, partner.end_price);
+      const userReturn = calcPKReturn(user.start_price, participantEndPrice(record, user));
+      const partnerReturn = calcPKReturn(partner.start_price, participantEndPrice(record, partner));
       const marketReturn = calcPKReturn(
         benchmark.start_price,
-        benchmark.end_price
+        participantEndPrice(record, benchmark)
       );
 
       const statusText =
@@ -1710,6 +1726,16 @@ async function showPKRecords() {
           '<p>👤 <strong>你：</strong>' +
             (user.stock || "-") +
             '　<strong>' + formatPKReturn(userReturn) + '</strong></p>' +
+
+          (record.real_trade
+            ? '<p>💰 <strong>實戰報酬：</strong>' +
+              formatPKReturn(record.real_trade.return) +
+              '（' + (record.real_trade.profit >= 0 ? '+' : '') +
+              Number(record.real_trade.profit).toLocaleString("zh-TW") +
+              ' 元｜與PK差距 ' +
+              (record.real_trade.gap >= 0 ? '+' : '') +
+              Number(record.real_trade.gap).toFixed(2) + ' 個百分點）</p>'
+            : '') +
 
           '<p>🤖 <strong>伙計：</strong>' +
             (partner.stock || "-") +

@@ -99,6 +99,63 @@
         "end_price": 171.5
       },
       "benchmark_label": "系統"
+    },
+    {
+      "round": 3,
+      "status": "closed",
+      "start_date": "2026-09-29",
+      "end_date": "2026-10-02",
+      "signal_date": "2026-09-28",
+      "start_price_date": "2026-09-28",
+      "user": {
+        "code": "2408",
+        "stock": "南亞科",
+        "start_price": 506,
+        "end_price": 526
+      },
+      "partner": {
+        "code": "2308",
+        "stock": "台達電",
+        "start_price": 1835,
+        "end_price": 1885
+      },
+      "benchmark": {
+        "code": "2317",
+        "stock": "鴻海",
+        "start_price": 250.5,
+        "end_price": 251.5
+      },
+      "benchmark_label": "系統",
+      "real_trade": {
+        "stock": "南亞科",
+        "return": 3.56,
+        "profit": 1798,
+        "gap": -0.39
+      }
+    },
+    {
+      "round": 4,
+      "status": "active",
+      "start_date": "2026-10-02",
+      "end_date": "2026-10-08",
+      "signal_date": "2026-10-02",
+      "start_price_date": "2026-10-02",
+      "user": {
+        "code": "0050",
+        "stock": "元大台灣50",
+        "start_price": 112.8
+      },
+      "partner": {
+        "code": "6278",
+        "stock": "台表科",
+        "start_price": 217
+      },
+      "benchmark": {
+        "code": "3189",
+        "stock": "景碩",
+        "start_price": 1050
+      },
+      "benchmark_label": "系統"
     }
   ]
 }
