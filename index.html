@@ -367,6 +367,13 @@ h1 {
 
 <div class="card">
   <div class="section-title">📡 第11–100檔候選觀察池</div>
+  <p style="margin-top:-6px;color:#64748b;">先找變化，再等價格確認。第一版以30檔動態雷達驗證「提早發現」。</p>
+  <div id="radar-filters" style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 16px;">
+    <button type="button" data-radar-filter="all">全部</button>
+    <button type="button" data-radar-filter="seed">🌱 未發動</button>
+    <button type="button" data-radar-filter="move">👀 異動</button>
+    <button type="button" data-radar-filter="strong">🔥 轉強</button>
+  </div>
   <div id="secondary-watchlist">
     <p>正在載入第二層雷達...</p>
   </div>
@@ -490,12 +497,36 @@ const stockConfig = {
 };
 
 const secondaryWatchlistConfig = {
-  "6278": {
-    name: "台表科",
-    industry: "電子",
-    group: "SMT／AI伺服器／光通訊／DDR5",
-    note: "第二層雷達：觀察法人連續性、融資變化與AI/光通訊/DDR5成長是否形成共振"
-  }
+  "2383": { name:"台光電", industry:"電子", group:"PCB／CCL", note:"AI高階材料；觀察高價股擴散與法人延續" },
+  "6274": { name:"台燿", industry:"電子", group:"PCB／CCL", note:"高階CCL；觀察AI伺服器材料需求與相對強度" },
+  "2368": { name:"金像電", industry:"電子", group:"PCB／CCL", note:"AI伺服器PCB；觀察量價與法人集中" },
+  "2313": { name:"華通", industry:"電子", group:"PCB／CCL", note:"PCB；觀察族群輪動與法人轉強" },
+  "6213": { name:"聯茂", industry:"電子", group:"PCB／CCL", note:"CCL；觀察落後補漲與籌碼轉折" },
+  "8358": { name:"金居", industry:"電子", group:"PCB／CCL", note:"銅箔材料；觀察上游材料資金擴散" },
+  "3189": { name:"景碩", industry:"電子", group:"ABF載板", note:"強勢千金對照組；觀察高價＋產業＋資金集中" },
+  "8046": { name:"南電", industry:"電子", group:"ABF載板", note:"ABF載板；觀察景碩強勢是否向同族群擴散" },
+  "3037": { name:"欣興", industry:"電子", group:"ABF載板", note:"ABF載板；觀察法人與價格同步轉強" },
+  "2408": { name:"南亞科", industry:"半導體", group:"記憶體", note:"記憶體核心；觀察籌碼先行與價格確認" },
+  "2344": { name:"華邦電", industry:"半導體", group:"記憶體", note:"記憶體；觀察資金回補延續性" },
+  "8299": { name:"群聯", industry:"半導體", group:"記憶體", note:"NAND控制；觀察產業報價與法人共振" },
+  "2308": { name:"台達電", industry:"電子", group:"AI伺服器／電源", note:"AI電源；高價股風險偏好與相對強弱指標" },
+  "2301": { name:"光寶科", industry:"電子", group:"AI伺服器／電源", note:"AI電源；觀察第二梯隊資金接棒" },
+  "3665": { name:"貿聯-KY", industry:"電子", group:"AI伺服器／電源", note:"高速連接；觀察AI資金擴散" },
+  "6121": { name:"新普", industry:"電子", group:"AI伺服器／電源", note:"電源／電池；觀察低基期轉折" },
+  "3017": { name:"奇鋐", industry:"電子", group:"散熱／機構", note:"AI散熱；千金股溫度重要成員" },
+  "3324": { name:"雙鴻", industry:"電子", group:"散熱／機構", note:"AI散熱；觀察與奇鋐同步或背離" },
+  "3653": { name:"健策", industry:"電子", group:"散熱／機構", note:"散熱／高階零組件；觀察高價股相對強度" },
+  "2059": { name:"川湖", industry:"電子", group:"散熱／機構", note:"伺服器滑軌；股王／股后雷達高價樣本" },
+  "6442": { name:"光聖", industry:"電子", group:"CPO／光通訊", note:"光通訊；觀察資金集中與突破" },
+  "3081": { name:"聯亞", industry:"電子", group:"CPO／光通訊", note:"光通訊；觀察產業動能提前轉強" },
+  "4979": { name:"華星光", industry:"電子", group:"CPO／光通訊", note:"光通訊；觀察法人與量價共振" },
+  "3363": { name:"上詮", industry:"電子", group:"CPO／光通訊", note:"CPO；觀察題材轉為實際資金" },
+  "3443": { name:"創意", industry:"半導體", group:"ASIC／先進製程", note:"ASIC；股王／股后雷達高價樣本" },
+  "3661": { name:"世芯-KY", industry:"半導體", group:"ASIC／先進製程", note:"ASIC；觀察高價IC設計相對強度" },
+  "6187": { name:"萬潤", industry:"電子", group:"先進封裝／設備", note:"先進封裝設備；觀察資本支出資金輪動" },
+  "3711": { name:"日月光投控", industry:"半導體", group:"先進封裝／設備", note:"封測；觀察先進封裝需求擴散" },
+  "6278": { name:"台表科", industry:"電子", group:"第二梯隊／轉折", note:"第一個未發動驗證樣本；觀察法人連續性與AI/光通訊/DDR5共振" },
+  "3374": { name:"精材", industry:"半導體", group:"第二梯隊／轉折", note:"封裝測試；觀察低基期與技術轉折" }
 };
   function getIndustryRanking(stockData) {
   const groups = {};
@@ -1984,20 +2015,39 @@ function showSecondaryWatchlist(stockData) {
   const el = document.getElementById("secondary-watchlist");
   if (!el) return;
 
+  const marketPct = stockData?.["0050"] ? getStockScore(stockData["0050"]).percent : 0;
+
   const rows = Object.entries(secondaryWatchlistConfig).map(([code, config]) => {
     const stock = stockData?.[code];
-    if (!stock) {
-      return '<div class="watchlist-card"><div class="watchlist-title"><strong>' +
-        config.name + ' ' + code + '</strong><span class="info-score">第11–100檔</span></div>' +
-        '<div class="pick-group">' + config.group + '</div>' +
-        '<div class="pick-block">等待下一次正式盤後資料更新後開始追蹤。</div></div>';
-    }
+    if (!stock) return { code, config, status:"waiting", score:0, html:
+      '<div class="watchlist-card radar-row" data-status="waiting"><div class="watchlist-title"><strong>' +
+      config.name + ' ' + code + '</strong><span class="info-score">等待資料</span></div>' +
+      '<div class="pick-group">' + config.group + '</div><div class="pick-block">' + config.note + '</div></div>' };
 
     const r = getStockScore(stock);
-    const direction = r.percent >= 2 ? "🟢 價格轉強" :
-                      r.percent <= -2 ? "🔴 價格轉弱" : "🟡 價格觀察";
-    return '<div class="watchlist-card"><div class="watchlist-title"><strong>' +
-      config.name + ' ' + code + '</strong><span class="info-score">第11–100檔</span></div>' +
+    const net = r.foreign + r.trust;
+    const relative = r.percent - marketPct;
+    let score = 0;
+    if (net > 0) score += 20;
+    if (r.foreign > 0 && r.trust > 0) score += 10;
+    if (relative > 0) score += 20;
+    if (relative >= 1) score += 10;
+    if (r.percent > 0) score += 10;
+    if (Math.abs(r.percent) < 2 && net > 0) score += 10;
+    if (r.percent >= 2) score += 10;
+    if (r.percent > 4) score -= 10; // 避免只因已大漲而排名過高
+    score = Math.max(0, Math.min(100, score));
+
+    let status = "normal", label = "觀察";
+    if (score >= 70) { status = "strong"; label = "🔥 轉強"; }
+    else if (score >= 60) { status = "move"; label = "👀 異動"; }
+    else if (Math.abs(r.percent) < 2 && net > 0 && relative > 0) { status = "seed"; label = "🌱 未發動"; }
+
+    const direction = r.percent >= 2 ? "🟢 明確轉強" :
+                      r.percent <= -2 ? "🔴 明確轉弱" : "🟡 ±2%內";
+    const html = '<div class="watchlist-card radar-row" data-status="' + status + '">' +
+      '<div class="watchlist-title"><strong>' + config.name + ' ' + code + '</strong>' +
+      '<span class="info-score">' + score + '分｜' + label + '</span></div>' +
       '<div class="pick-group">' + config.group + '</div>' +
       '<div class="data-row">' +
         '<div class="data-box"><div class="label">收盤</div><div class="value">' + stock.price + '</div></div>' +
@@ -2007,10 +2057,25 @@ function showSecondaryWatchlist(stockData) {
       '</div>' +
       '<div class="pick-block">外資：' + formatInstitutionText(stock.foreign) +
       '｜投信：' + formatInstitutionText(stock.trust) +
+      '<br>相對0050：' + (relative > 0 ? "+" : "") + relative.toFixed(2) + '%' +
       '<br>觀察理由：' + config.note + '</div></div>';
-  });
+    return { code, config, status, score, html };
+  }).sort((a,b) => b.score - a.score);
 
-  el.innerHTML = rows.join("");
+  el.innerHTML = rows.map(x => x.html).join("");
+
+  const filterBox = document.getElementById("radar-filters");
+  if (filterBox && !filterBox.dataset.bound) {
+    filterBox.dataset.bound = "1";
+    filterBox.addEventListener("click", e => {
+      const btn = e.target.closest("button[data-radar-filter]");
+      if (!btn) return;
+      const filter = btn.dataset.radarFilter;
+      document.querySelectorAll("#secondary-watchlist .radar-row").forEach(row => {
+        row.style.display = (filter === "all" || row.dataset.status === filter) ? "" : "none";
+      });
+    });
+  }
 }
 
   async function loadStockData() {
