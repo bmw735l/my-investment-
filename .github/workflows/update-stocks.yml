@@ -255,10 +255,18 @@ jobs:
               history = {}
 
           # 同一天重新執行會直接覆寫，修正錯誤資料
+          # Preserve previously backfilled OHLC / historical fields for the same date.
+          existing = history.get(stock_trade_date, {}).get("stocks", {})
+          merged = {}
+          for code, stock in result.items():
+              merged[code] = {**existing.get(code, {}), **stock}
+          for code, stock in existing.items():
+              if code not in merged:
+                  merged[code] = stock
           history[stock_trade_date] = {
               "updated": output["updated"],
               "trade_date": stock_trade_date,
-              "stocks": result
+              "stocks": merged
           }
 
           # 保留最近 60 個交易日
@@ -293,6 +301,11 @@ jobs:
               f"updated={output['updated']}"
           )
           PY
+
+      - name: Backfill OHLC and institutional history
+        run: |
+          python3 backfill_ohlc.py
+          python3 backfill_institutions.py
 
       - name: Save stock data
         run: |
