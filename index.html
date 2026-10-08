@@ -2384,7 +2384,8 @@ function calculateEES(code, history, asOfDate) {
   const available=scoreParts.filter(x=>x.available);
   const earned=available.reduce((a,x)=>a+x.score,0);
   const covered=available.reduce((a,x)=>a+x.max,0);
-  const score=covered?Math.round(earned/covered*100):null;
+  // Absolute 100-point score: unavailable factors contribute no points, never inflate scores.
+  const score=Math.round(earned);
   // 高分但已大幅乖離，標示為已發動／過熱，不列早期候選。
   const stage=priceGain>18||stretch>16?"過熱":priceGain>10||stretch>10?"已發動":
     last>high10&&ratio!==null&&ratio>=1.5?"突破確認":
@@ -2418,7 +2419,7 @@ function showEESRadar(history) {
     dates.map(d=>'<option value="'+esc(d)+'"'+(d===date?' selected':'')+'>'+esc(d)+'</option>').join('')+
     '</select><span style="font-size:13px;color:#64748b">僅用選定日期及以前的行情｜可回看2026-10-02</span></div>';
   const table=(items,showReason)=>'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;min-width:650px;text-align:center">'+
-    '<thead><tr style="background:#f7f9fc"><th>股票</th><th>EES</th><th>資料覆蓋</th><th>階段</th><th>5日漲幅</th>'+(showReason?'<th>判定原因</th>':'')+'</tr></thead><tbody>'+
+    '<thead><tr style="background:#f7f9fc"><th>股票</th><th>EES實得/100</th><th>資料覆蓋</th><th>階段</th><th>5日漲幅</th>'+(showReason?'<th>判定原因</th>':'')+'</tr></thead><tbody>'+
     items.map(x=>'<tr style="border-top:1px solid #e2e8f0"><td>'+esc(x.name)+' '+esc(x.code)+'</td><td><strong>'+x.score+'</strong></td><td>'+x.covered+'/100</td><td>'+esc(x.stage)+'</td><td>'+x.priceGain.toFixed(2)+'%</td>'+(showReason?'<td>'+esc(reason(x))+'</td>':'')+'</tr>').join('')+
     '</tbody></table></div>';
   el.innerHTML=header+
@@ -2428,7 +2429,7 @@ function showEESRadar(history) {
     '<h3 style="margin:20px 0 8px">🔎 全部股票觀察榜</h3>'+
     '<p style="font-size:13px;color:#64748b">完整列出已可計算的股票，包括已發動、突破確認與未達門檻者；排名不等於買進建議。</p>'+
     (all.length?table(all,true):'<p>資料不足，尚無可評估標的。</p>')+
-    '<details style="margin-top:12px"><summary>查看分數規則與資料限制</summary><p>價格25、成交量20、相對強弱20、法人籌碼20、同族群15。缺資料項目不給分也不扣分，以可用權重正規化；資料覆蓋低於75/100不列候選。歷史回看按指定日期重新計算，並非當日已儲存的事前預測紀錄；回看日期之後的報酬不參與計分。部分同族群缺少可比樣本。</p></details>';
+    '<details style="margin-top:12px"><summary>查看分數規則與資料限制</summary><p>價格25、成交量20、相對強弱20、法人籌碼20、同族群15。缺資料項目不計分、不補分，也不將部分分數換算為100；資料覆蓋低於75/100不列候選。歷史回看按指定日期重新計算，並非當日已儲存的事前預測紀錄；回看日期之後的報酬不參與計分。部分同族群缺少可比樣本。</p></details>';
   el.querySelector("#ees-date").addEventListener("change",()=>showEESRadar(history));
 }
 
