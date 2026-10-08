@@ -2400,7 +2400,7 @@ function showEESRadar(history) {
   const latest=dates[dates.length-1];
   const oldChoice=el.querySelector("#ees-date")?.value;
   const date=oldChoice&&dates.includes(oldChoice)?oldChoice:latest;
-  const esc=x=>String(x).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;',"'" :"&#39;"}[c]));
+  const esc=x=>String(x).replace(/[&<>"\x27]/g, c=>({ "&":"&amp;", "<":"&lt;", ">":"&gt;", "\x22":"&quot;", "\x27":"&#39;" }[c]));
   const universe=Object.keys(history[date]?.stocks||{});
   const all=universe.map(c=>calculateEES(c,history,date)).filter(Boolean).sort((a,b)=>(b.score??-1)-(a.score??-1));
   const eligible=all.filter(x=>x.eligible);
