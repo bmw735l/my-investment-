@@ -2439,7 +2439,14 @@ function showEESRadar(history) {
     const historyResponse = await fetch("history.json?v=" + Date.now());
     const history = await historyResponse.json();
 
-    showEESRadar(history);
+    // EES is optional: a radar calculation error must never block the main dashboard.
+    try {
+      showEESRadar(history);
+    } catch (eesError) {
+      console.error("EES 雷達計算失敗：", eesError);
+      const radar = document.getElementById("ees-radar");
+      if (radar) radar.textContent = "EES 雷達計算發生錯誤，其他行情資訊仍可正常使用。請重新整理或回報錯誤。";
+    }
     const historyDates = Object.keys(history).sort();
     const currentTradeDate = data.trade_date;
 
@@ -2476,7 +2483,9 @@ showTradeRecords();
     console.log("股票資料更新時間：", data.updated);
 
   } catch (error) {
-    console.error("讀取 stocks.json 失敗：", error);
+    console.error("情報站資料載入或顯示失敗：", error);
+    const status = document.getElementById("update-time");
+    if (status) status.textContent = "載入失敗，請重新整理（詳見瀏覽器主控台）";
   }
 }
 
