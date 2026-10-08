@@ -424,6 +424,12 @@ h1 {
 </div>
 
 <div class="card">
+  <div class="section-title">🌱 EES 早期發動雷達｜研究版</div>
+  <p style="color:#64748b;font-size:14px">選趨勢、找萌芽；分數是訊號強度，不是上漲機率。僅用評估日及以前的資料，不回頭偷看未來。</p>
+  <div id="ees-radar">正在計算早期發動訊號…</div>
+</div>
+
+<div class="card">
   <div class="section-title">🏆 PK 紀錄</div>
 
   <div id="pk-ownership"><p>正在載入PK三檔集保籌碼...</p></div>
@@ -2293,6 +2299,117 @@ function showSecondaryWatchlist(stockData) {
   }
 }
 
+
+/* EES v1：事前可重算的早期發動分數。權重 25/20/20/20/15。
+   資料缺失不以零分懲罰，顯示資料覆蓋率；沒有完整法人資料不冒充確認。 */
+function calculateEES(code, history, asOfDate) {
+  const dates=Object.keys(history||{}).filter(d=>d<=asOfDate).sort();
+  const series=dates.map(date=>({date, s:history[date]?.stocks?.[code]}))
+    .filter(x=>x.s && Number(x.s.price)>0);
+  const n=series.length;
+  if(n<16)return null;
+  const p=series.map(x=>Number(x.s.price)), latest=series[n-1].s;
+  const last=p[n-1], prev=p[n-2], p5=p[n-6], p10=p[n-11];
+  const avg=(a)=>a.reduce((x,y)=>x+y,0)/a.length;
+  const ma5=avg(p.slice(-5)),ma10=avg(p.slice(-10)),ma15=avg(p.slice(-15));
+  const high10=Math.max(...p.slice(-11,-1)), low10=Math.min(...p.slice(-11,-1));
+  const priceGain=(last/p5-1)*100, stretch=(last/ma10-1)*100;
+  const scoreParts=[], add=(name,score,max,detail,available=true)=>scoreParts.push({name,score,max,detail,available});
+  // ①價格結構：整理後墊高優於已經大漲的追價。
+  let ps=0;
+  if(last>ma5 && ma5>=ma10)ps+=9;
+  if(ma10>=ma15)ps+=5;
+  if(last>low10*1.04)ps+=4;
+  if(last>prev && last<=high10*1.035)ps+=7;
+  if(priceGain>12 || stretch>13)ps=Math.max(0,ps-12);
+  add("價格結構",ps,25,"5/10/15日趨勢、區間位置及過熱扣分");
+  // ②量能：量縮整理與溫和增量優先，避免暴量下跌。
+  const vol=series.slice(-6).map(x=>Number(x.s.volume));
+  const vOK=vol.length===6&&vol.every(v=>Number.isFinite(v)&&v>0);
+  let ratio=null,vs=0;
+  if(vOK){
+    ratio=vol[5]/avg(vol.slice(0,5));
+    if(last>=prev && ratio>=1.2 && ratio<=2.5)vs=20;
+    else if(last>=prev && ratio>=0.8 && ratio<1.2)vs=14;
+    else if(last>=prev && ratio<0.8)vs=10;
+    else if(last<prev && ratio<0.85)vs=12;
+    else if(last<prev && ratio>=1.5)vs=0;
+    else vs=5;
+  }
+  add("成交量",vs,20,vOK?"當日／前5日量比 "+ratio.toFixed(2):"成交量資料不足",vOK);
+  // ③相對強弱：相對0050的五日績效及最近改善幅度。
+  const bench=dates.map(date=>history[date]?.stocks?.["0050"]?.price);
+  const getBench=(date)=>Number(history[date]?.stocks?.["0050"]?.price);
+  const b0=getBench(series[n-1].date),b5=getBench(series[n-6].date),b10=getBench(series[n-11].date);
+  const bOK=[b0,b5,b10].every(v=>Number.isFinite(v)&&v>0);
+  let rs=0,relative=0;
+  if(bOK){
+    relative=priceGain-(b0/b5-1)*100;
+    const oldRel=(p5/p10-1)*100-(b5/b10-1)*100;
+    if(relative>0)rs+=10;
+    if(relative>oldRel)rs+=10;
+  }
+  add("相對強弱",rs,20,bOK?"5日相對0050 "+relative.toFixed(2)+"%":"0050歷史不足",bOK);
+  // ④法人籌碼：使用真實三日買賣超變化，沒有資料時不推估。
+  const inst=series.slice(-6).map(x=>{
+    const z=x.s;
+    if(z.foreign==null||z.trust==null)return null;
+    const f=Number(String(z.foreign).replace(/,/g,"")),t=Number(String(z.trust).replace(/,/g,""));
+    return Number.isFinite(f)&&Number.isFinite(t)?f+t:null;
+  });
+  const iOK=inst.length===6&&inst.every(x=>x!==null);
+  let is=0;
+  if(iOK){
+    const old=avg(inst.slice(0,3)),recent=avg(inst.slice(3,6));
+    if(recent>old)is+=12;
+    if(recent>0)is+=8;
+  }
+  add("法人籌碼",is,20,iOK?"外資＋投信近3日對比前3日":"缺少連續6日法人資料",iOK);
+  // ⑤產業：同組其他股票的5日動能及改善，排除本股以免重複。
+  const group=stockConfig[code]?.group;
+  const peers=Object.keys(stockConfig).filter(c=>c!==code&&stockConfig[c].group===group);
+  const peerReturns=peers.map(c=>{
+    const x0=Number(history[series[n-1].date]?.stocks?.[c]?.price);
+    const x5=Number(history[series[n-6].date]?.stocks?.[c]?.price);
+    const x10=Number(history[series[n-11].date]?.stocks?.[c]?.price);
+    return [x0,x5,x10].every(v=>v>0)?{now:(x0/x5-1)*100,old:(x5/x10-1)*100}:null;
+  }).filter(Boolean);
+  let industry=0;
+  if(peerReturns.length){
+    const recent=avg(peerReturns.map(x=>x.now)),older=avg(peerReturns.map(x=>x.old));
+    if(recent>0)industry+=8;
+    if(recent>older)industry+=7;
+  }
+  add("同族群動能",industry,15,peerReturns.length?"同組其他 "+peerReturns.length+" 檔的五日動能":"同族群可比樣本不足",peerReturns.length>0);
+  const available=scoreParts.filter(x=>x.available);
+  const earned=available.reduce((a,x)=>a+x.score,0);
+  const covered=available.reduce((a,x)=>a+x.max,0);
+  const score=covered?Math.round(earned/covered*100):null;
+  // 高分但已大幅乖離，標示為已發動／過熱，不列早期候選。
+  const stage=priceGain>18||stretch>16?"過熱":priceGain>10||stretch>10?"已發動":
+    last>high10&&ratio!==null&&ratio>=1.5?"突破確認":
+    last>ma5&&ma5>ma10&&relative>0?"試攻":"萌芽／沉澱";
+  const eligible=covered>=75 && score>=65 && (stage==="萌芽／沉澱"||stage==="試攻");
+  return {code,name:stockConfig[code]?.name||latest.name||code,date:series[n-1].date,
+    score,covered,stage,eligible,parts:scoreParts,priceGain,stretch};
+}
+function showEESRadar(history) {
+  const el=document.getElementById("ees-radar");if(!el)return;
+  const date=Object.keys(history||{}).sort().at(-1);
+  if(!date){el.textContent="歷史資料不足";return;}
+  const codes=Object.keys(history[date]?.stocks||{});
+  const all=codes.map(c=>calculateEES(c,history,date)).filter(Boolean);
+  const selected=all.filter(x=>x.eligible).sort((a,b)=>b.score-a.score);
+  const rows=(selected.length?selected:all.filter(x=>x.covered>=75).sort((a,b)=>b.score-a.score).slice(0,5));
+  const esc=x=>String(x).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const fmt=x=>x==null?"—":x;
+  el.innerHTML='<p style="font-size:13px;color:#64748b">資料日：'+esc(date)+'｜符合早期條件：'+selected.length+'檔／評估：'+all.length+'檔｜資料覆蓋率不足75分者不列候選</p>'+
+    (selected.length?'':'<p><strong>目前無符合門檻的早期發動標的；下列為觀察排行，不是買進建議。</strong></p>')+
+    '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;min-width:550px"><thead><tr><th>股票</th><th>EES</th><th>資料覆蓋</th><th>階段</th><th>5日漲幅</th></tr></thead><tbody>'+
+    rows.slice(0,10).map(x=>'<tr style="border-top:1px solid #e2e8f0;text-align:center"><td>'+esc(x.name)+' '+esc(x.code)+'</td><td><strong>'+fmt(x.score)+'</strong></td><td>'+x.covered+'/100</td><td>'+esc(x.stage)+'</td><td>'+x.priceGain.toFixed(2)+'%</td></tr>').join('')+'</tbody></table></div>'+
+    '<details style="margin-top:12px"><summary>查看分數規則與資料限制</summary><p>價格25、成交量20、相對強弱20、法人籌碼20、同族群15。缺資料的項目不給分也不扣分，以可用權重正規化；資料覆蓋低於75/100不列候選。每次重新載入按歷史資料重算，不代表當日曾發出事前通知。部分股票同族群缺樣本，分數不宜直接橫比。</p></details>';
+}
+
   async function loadStockData() {
   try {
     const response = await fetch("stocks.json?v=" + Date.now());
@@ -2300,6 +2417,7 @@ function showSecondaryWatchlist(stockData) {
     const historyResponse = await fetch("history.json?v=" + Date.now());
     const history = await historyResponse.json();
 
+    showEESRadar(history);
     const historyDates = Object.keys(history).sort();
     const currentTradeDate = data.trade_date;
 
