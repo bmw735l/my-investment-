@@ -676,109 +676,67 @@ function getTrendText(code, currentStock, history, currentTradeDate) {
 
 // 技術轉折訊號：不是追已經大漲，而是抓「行為先變、價格尚未完全反映」
 function getTechnicalTurnSignal(code, currentStock, history, currentTradeDate, stockData) {
-  const points = [];
-  Object.keys(history || {}).sort().forEach(date => {
-    const st = history[date]?.stocks?.[code];
-    if (st) points.push({ date, stock: st });
-  });
+  // 第五層固定優先序：價格結構 > 成交量 > 均線 > KD。
+  // 僅使用已完成交易日的歷史資料；KD需完整最高、最低、收盤價才計算。
+  const points = Object.keys(history || {}).sort().map(date => ({
+    date, stock: history[date]?.stocks?.[code]
+  })).filter(p => p.stock && Number.isFinite(Number(p.stock.price)) && Number(p.stock.price) > 0);
   if (currentTradeDate && currentStock && !points.some(p => p.date === currentTradeDate)) {
     points.push({ date: currentTradeDate, stock: currentStock });
+    points.sort((a,b) => a.date.localeCompare(b.date));
   }
-
-  const recent = points.slice(-4);
-  if (recent.length < 2) {
-    return { score: 0, label: "⚪ 累積中", reasons: ["歷史資料不足"] };
-  }
-
-  const cur = recent[recent.length - 1].stock;
-  const prev = recent[recent.length - 2].stock;
-  const curResult = getStockScore(cur);
-  const prevResult = getStockScore(prev);
-  const curNet = curResult.foreign + curResult.trust;
-  const prevNet = prevResult.foreign + prevResult.trust;
-  const curVol = Number(cur.volume);
-  const prevVol = Number(prev.volume);
-  const prices = recent.map(p => Number(p.stock.price)).filter(Number.isFinite);
-  const recentLow = prices.length > 1 ? Math.min(...prices.slice(0, -1)) : NaN;
-
-  let score = 0;
+  const n = points.length;
+  if (n < 2) return { score: 0, label: "⚪ 資料累積中", reasons: ["第五層：歷史收盤資料不足"] };
+  const cur = points[n-1].stock, prev = points[n-2].stock;
+  const price = Number(cur.price), prevPrice = Number(prev.price);
   const reasons = [];
+  let score = 0, priceWeak = false, priceStrong = false, volumeConfirmed = false;
 
-  // 籌碼先轉：最重要的早期訊號
-  if (prevNet < 0 && curNet > 0) {
-    score += 2;
-    reasons.push("法人由賣轉買");
-  } else if (prevNet > 0 && curNet < 0) {
-    score -= 1;
-    reasons.push("法人由買轉賣");
-  }
+  // 1. 價格結構：先看突破／跌破前五日收盤區間，不能被其他指標覆蓋。
+  const prior = points.slice(-6,-1).map(p=>Number(p.stock.price));
+  if (prior.length === 5) {
+    const high = Math.max(...prior), low = Math.min(...prior);
+    if (price > high) { priceStrong = true; score += 2; reasons.push("①價格：突破前5日收盤高點"); }
+    else if (price < low) { priceWeak = true; score -= 3; reasons.push("①價格：跌破前5日收盤低點"); }
+    else if (price > prevPrice) { score += 1; reasons.push("①價格：區間內走高，尚未突破"); }
+    else { reasons.push("①價格：區間整理，未確認突破"); }
+  } else reasons.push("①價格：待累積5個交易日");
 
-  // 跌時量縮：賣壓可能正在退
-  if (curResult.percent <= 0 && Number.isFinite(curVol) && Number.isFinite(prevVol) && curVol < prevVol) {
-    score += 1;
-    reasons.push("回檔量縮，賣壓降溫");
-  }
+  // 2. 成交量：與前五個完整交易日平均量相比。
+  const vols = points.slice(-6,-1).map(p=>Number(p.stock.volume));
+  const volume = Number(cur.volume);
+  if (vols.length===5 && vols.every(v=>Number.isFinite(v)&&v>0) && Number.isFinite(volume)&&volume>0) {
+    const ratio = volume / (vols.reduce((a,b)=>a+b,0)/5);
+    if (priceStrong && ratio>=1.5) { score+=3; volumeConfirmed=true; reasons.push("②成交量：🔥帶量突破，量比"+ratio.toFixed(2)+"倍"); }
+    else if (priceWeak && ratio>=1.5) { score-=3; reasons.push("②成交量：🔴放量跌破，量比"+ratio.toFixed(2)+"倍"); }
+    else if (priceStrong && ratio<1.2) reasons.push("②成交量：⚠️突破但量能不足，量比"+ratio.toFixed(2)+"倍");
+    else if (!priceWeak && price>prevPrice && ratio>=1.2) { score+=1; reasons.push("②成交量：👀量增試攻，量比"+ratio.toFixed(2)+"倍"); }
+    else if (price<=prevPrice && ratio<=0.8 && !priceWeak) { score+=1; reasons.push("②成交量：🌱量縮整理，量比"+ratio.toFixed(2)+"倍"); }
+    else reasons.push("②成交量：未確認量價共振，量比"+ratio.toFixed(2)+"倍");
+  } else reasons.push("②成交量：待累積5日有效量能");
 
-  // 價格沒有再破近期低點
-  if (Number.isFinite(recentLow) && Number(cur.price) >= recentLow) {
-    score += 1;
-    reasons.push("價格守住近期低點");
-  }
+  // 3. 均線：5日／10日收盤均線，只作趨勢確認，不凌駕價格結構。
+  const closes = points.map(p=>Number(p.stock.price));
+  if (closes.length>=10) {
+    const ma5=closes.slice(-5).reduce((a,b)=>a+b,0)/5;
+    const ma10=closes.slice(-10).reduce((a,b)=>a+b,0)/10;
+    if (price>ma5 && ma5>ma10) { if(!priceWeak)score+=1; reasons.push("③均線：價在5日線上，5日線高於10日線"); }
+    else if (price<ma5 && ma5<ma10) { score-=1; reasons.push("③均線：價在5日線下，5日線低於10日線"); }
+    else reasons.push("③均線：多空交錯");
+  } else reasons.push("③均線：待累積10日收盤價");
 
-  // 相對大盤開始變強
-  const market = stockData?.["0050"];
-  if (market) {
-    const marketPct = getStockScore(market).percent;
-    if (curResult.percent > marketPct) {
-      score += 1;
-      reasons.push("相對0050轉強");
-    }
-  }
+  // 4. KD：必須有至少9日真實高低價與前期K/D種子值；目前來源不足，不偽造。
+  reasons.push("④KD：尚無完整高低價序列，暫不計分");
 
-  // 第五層量價階段：以前五個完整交易日為基準，避免把盤中量與全日量比較。
-  const baseline = points.slice(-6, -1).map(p => Number(p.stock.volume))
-    .filter(v => Number.isFinite(v) && v > 0);
-  const priorCloses = points.slice(-6, -1).map(p => Number(p.stock.price))
-    .filter(Number.isFinite);
-  if (baseline.length === 5 && priorCloses.length === 5 &&
-      Number.isFinite(curVol) && curVol > 0 && Number.isFinite(Number(cur.price))) {
-    const avgVol = baseline.reduce((a, b) => a + b, 0) / 5;
-    const ratio = curVol / avgVol;
-    const priorHigh = Math.max(...priorCloses);
-    const price = Number(cur.price);
-    const rising = price > Number(prev.price);
-    const breakout = price > priorHigh;
-    if (breakout && ratio >= 1.5 && curResult.percent >= 2) {
-      score += 3;
-      reasons.push("🔥 帶量突破：收盤突破前5日收盤高點，量比" + ratio.toFixed(2) + "倍");
-    } else if (rising && ratio >= 1.2 && curResult.percent < 2) {
-      score += 2;
-      reasons.push("👀 量增試攻：量比" + ratio.toFixed(2) + "倍，尚未達+2%確認門檻");
-    } else if (breakout && ratio < 1.2) {
-      reasons.push("⚠️ 突破但量能不足：量比" + ratio.toFixed(2) + "倍");
-    } else if (!rising && ratio <= 0.8 && price >= Math.min(...priorCloses)) {
-      score += 1;
-      reasons.push("🌱 量縮整理：量比" + ratio.toFixed(2) + "倍，仍守近期收盤低點");
-    } else if (!rising && ratio >= 1.5 && curResult.percent <= -2) {
-      score -= 2;
-      reasons.push("🔴 放量下跌：量比" + ratio.toFixed(2) + "倍");
-    } else {
-      reasons.push("量價未共振：量比" + ratio.toFixed(2) + "倍");
-    }
-  } else {
-    reasons.push("量價階段待累積5個有效交易日");
-  }
-
-  // 已經噴太多就不把它當「早期轉折」
-  if (curResult.percent > 4) {
-    score -= 2;
-    reasons.push("當日漲幅已大，非早期訊號");
-  }
-
-  const label = score >= 3 ? "🟢 技術轉折增強" :
-                score >= 1 ? "🟡 技術轉折萌芽" :
-                score <= -2 ? "🔴 技術轉折轉弱" : "⚪ 尚未確認";
-  return { score, label, reasons };
+  // 既有法人及相對強弱屬六層中的其他層，不再混入第五層。
+  // 未確認量能時，單靠均線或KD不能標記帶量突破。
+  let label = "⚪ 尚未確認";
+  if (priceWeak) label = "🔴 價格結構轉弱";
+  else if (priceStrong && volumeConfirmed) label = "🔥 帶量突破確認";
+  else if (priceStrong) label = "⚠️ 突破待量能確認";
+  else if (score>=2) label = "👀 技術轉折試攻";
+  else if (score>=1) label = "🌱 技術轉折觀察";
+  return {score,label,reasons};
 }
 
 function getSixLayerAnalysis(code, stock, stockData, previousStocks, history, currentTradeDate) {
