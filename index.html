@@ -725,8 +725,37 @@ function getTechnicalTurnSignal(code, currentStock, history, currentTradeDate, s
     else reasons.push("③均線：多空交錯");
   } else reasons.push("③均線：待累積10日收盤價");
 
-  // 4. KD：必須有至少9日真實高低價與前期K/D種子值；目前來源不足，不偽造。
-  reasons.push("④KD：尚無完整高低價序列，暫不計分");
+  // 4. KD(9,3,3)：使用真實9日最高最低及收盤，初始K=D=50。
+  // 為降低初始值偏差，至少需20個連續有效OHLC交易日。
+  const ohlc = points.map(p => ({
+    high: Number(p.stock.high), low: Number(p.stock.low),
+    close: Number(p.stock.price),
+    valid: p.stock.high != null && p.stock.low != null &&
+      Number.isFinite(Number(p.stock.high)) && Number.isFinite(Number(p.stock.low)) &&
+      Number(p.stock.high)>=Number(p.stock.low) &&
+      Number(p.stock.high)>=Number(p.stock.price) &&
+      Number(p.stock.low)<=Number(p.stock.price)
+  }));
+  let k=50, d=50, priorK=null, priorD=null, kdCount=0;
+  for (let i=8; i<ohlc.length; i++) {
+    const window=ohlc.slice(i-8,i+1);
+    if (!window.every(x=>x.valid)) { k=50; d=50; kdCount=0; continue; }
+    const hi=Math.max(...window.map(x=>x.high));
+    const lo=Math.min(...window.map(x=>x.low));
+    const rsv=hi===lo?50:(ohlc[i].close-lo)/(hi-lo)*100;
+    priorK=k; priorD=d;
+    k=(2*k+rsv)/3; d=(2*d+k)/3; kdCount++;
+  }
+  if (kdCount>=12 && priorK!==null && priorD!==null) {
+    const kUp=k>priorK, dUp=d>priorD;
+    if (k>d && kUp && dUp) {
+      if (!priceWeak && (priceStrong || volumeConfirmed)) score+=1;
+      reasons.push("④KD：K"+k.toFixed(1)+"／D"+d.toFixed(1)+"，多方動能增強");
+    } else if (k<d && !kUp && !dUp) {
+      if (!priceStrong) score-=1;
+      reasons.push("④KD：K"+k.toFixed(1)+"／D"+d.toFixed(1)+"，空方動能增強");
+    } else reasons.push("④KD：K"+k.toFixed(1)+"／D"+d.toFixed(1)+"，動能分歧");
+  } else reasons.push("④KD：待累積至少20個連續有效OHLC交易日");
 
   // 既有法人及相對強弱屬六層中的其他層，不再混入第五層。
   // 未確認量能時，單靠均線或KD不能標記帶量突破。
