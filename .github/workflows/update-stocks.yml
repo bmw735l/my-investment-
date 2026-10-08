@@ -107,6 +107,9 @@ jobs:
 
               result[code] = {
                   "name": name,
+                  "open": row[3].replace(",", ""),
+                  "high": row[4].replace(",", ""),
+                  "low": row[5].replace(",", ""),
                   "price": row[6].replace(",", ""),
                   "change": row[7].replace(",", ""),
                   "volume": row[1].replace(",", ""),
