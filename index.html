@@ -2394,20 +2394,42 @@ function calculateEES(code, history, asOfDate) {
     score,covered,stage,eligible,parts:scoreParts,priceGain,stretch};
 }
 function showEESRadar(history) {
-  const el=document.getElementById("ees-radar");if(!el)return;
-  const date=Object.keys(history||{}).sort().at(-1);
-  if(!date){el.textContent="歷史資料不足";return;}
-  const codes=Object.keys(history[date]?.stocks||{});
-  const all=codes.map(c=>calculateEES(c,history,date)).filter(Boolean);
-  const selected=all.filter(x=>x.eligible).sort((a,b)=>b.score-a.score);
-  const rows=(selected.length?selected:all.filter(x=>x.covered>=75).sort((a,b)=>b.score-a.score).slice(0,5));
-  const esc=x=>String(x).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-  const fmt=x=>x==null?"—":x;
-  el.innerHTML='<p style="font-size:13px;color:#64748b">資料日：'+esc(date)+'｜符合早期條件：'+selected.length+'檔／評估：'+all.length+'檔｜資料覆蓋率不足75分者不列候選</p>'+
-    (selected.length?'':'<p><strong>目前無符合門檻的早期發動標的；下列為觀察排行，不是買進建議。</strong></p>')+
-    '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;min-width:550px"><thead><tr><th>股票</th><th>EES</th><th>資料覆蓋</th><th>階段</th><th>5日漲幅</th></tr></thead><tbody>'+
-    rows.slice(0,10).map(x=>'<tr style="border-top:1px solid #e2e8f0;text-align:center"><td>'+esc(x.name)+' '+esc(x.code)+'</td><td><strong>'+fmt(x.score)+'</strong></td><td>'+x.covered+'/100</td><td>'+esc(x.stage)+'</td><td>'+x.priceGain.toFixed(2)+'%</td></tr>').join('')+'</tbody></table></div>'+
-    '<details style="margin-top:12px"><summary>查看分數規則與資料限制</summary><p>價格25、成交量20、相對強弱20、法人籌碼20、同族群15。缺資料的項目不給分也不扣分，以可用權重正規化；資料覆蓋低於75/100不列候選。每次重新載入按歷史資料重算，不代表當日曾發出事前通知。部分股票同族群缺樣本，分數不宜直接橫比。</p></details>';
+  const el=document.getElementById("ees-radar"); if(!el)return;
+  const dates=Object.keys(history||{}).sort();
+  if(!dates.length){el.textContent="歷史資料不足";return;}
+  const latest=dates[dates.length-1];
+  const oldChoice=el.querySelector("#ees-date")?.value;
+  const date=oldChoice&&dates.includes(oldChoice)?oldChoice:latest;
+  const esc=x=>String(x).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;',"'" :"&#39;"}[c]));
+  const universe=Object.keys(history[date]?.stocks||{});
+  const all=universe.map(c=>calculateEES(c,history,date)).filter(Boolean).sort((a,b)=>(b.score??-1)-(a.score??-1));
+  const eligible=all.filter(x=>x.eligible);
+  const reason=x=>{
+    if(x.covered<75)return "資料不足（"+x.covered+"/100）";
+    if(x.stage==="過熱")return "過熱：不屬早期";
+    if(x.stage==="已發動")return "已發動：不追高";
+    if(x.stage==="突破確認")return "突破已確認：列追蹤非早期候選";
+    if(x.score<65)return "EES未達65分";
+    return x.eligible?"符合早期候選":"未符合早期條件";
+  };
+  const header='<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:10px 0">'+
+    '<label for="ees-date"><strong>歷史回看日期：</strong></label>'+
+    '<select id="ees-date" style="padding:7px;border:1px solid #cbd5e1;border-radius:6px">'+
+    dates.map(d=>'<option value="'+esc(d)+'"'+(d===date?' selected':'')+'>'+esc(d)+'</option>').join('')+
+    '</select><span style="font-size:13px;color:#64748b">僅用選定日期及以前的行情｜可回看2026-10-02</span></div>';
+  const table=(items,showReason)=>'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;min-width:650px;text-align:center">'+
+    '<thead><tr style="background:#f7f9fc"><th>股票</th><th>EES</th><th>資料覆蓋</th><th>階段</th><th>5日漲幅</th>'+(showReason?'<th>判定原因</th>':'')+'</tr></thead><tbody>'+
+    items.map(x=>'<tr style="border-top:1px solid #e2e8f0"><td>'+esc(x.name)+' '+esc(x.code)+'</td><td><strong>'+x.score+'</strong></td><td>'+x.covered+'/100</td><td>'+esc(x.stage)+'</td><td>'+x.priceGain.toFixed(2)+'%</td>'+(showReason?'<td>'+esc(reason(x))+'</td>':'')+'</tr>').join('')+
+    '</tbody></table></div>';
+  el.innerHTML=header+
+    '<p style="font-size:13px;color:#64748b">評估日：'+esc(date)+'｜評估 '+all.length+' 檔｜早期候選 '+eligible.length+' 檔</p>'+
+    '<h3 style="margin:16px 0 8px">🌱 早期候選榜</h3>'+
+    (eligible.length?table(eligible,false):'<p>當日沒有符合門檻的早期發動標的；不強制湊滿三檔。</p>')+
+    '<h3 style="margin:20px 0 8px">🔎 全部股票觀察榜</h3>'+
+    '<p style="font-size:13px;color:#64748b">完整列出已可計算的股票，包括已發動、突破確認與未達門檻者；排名不等於買進建議。</p>'+
+    (all.length?table(all,true):'<p>資料不足，尚無可評估標的。</p>')+
+    '<details style="margin-top:12px"><summary>查看分數規則與資料限制</summary><p>價格25、成交量20、相對強弱20、法人籌碼20、同族群15。缺資料項目不給分也不扣分，以可用權重正規化；資料覆蓋低於75/100不列候選。歷史回看按指定日期重新計算，並非當日已儲存的事前預測紀錄；回看日期之後的報酬不參與計分。部分同族群缺少可比樣本。</p></details>';
+  el.querySelector("#ees-date").addEventListener("change",()=>showEESRadar(history));
 }
 
   async function loadStockData() {
