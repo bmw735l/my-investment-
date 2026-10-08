@@ -1,6 +1,6 @@
 {
   "version": 3,
-  "updated": "2026-10-06 18:42",
+  "updated": "2026-10-08 收盤結算",
   "technical_snapshot_date": "2026-10-06 收盤",
   "technical_cards": [
     {
@@ -135,7 +135,7 @@
     },
     {
       "round": 4,
-      "status": "active",
+      "status": "closed",
       "start_date": "2026-10-02",
       "end_date": "2026-10-08",
       "signal_date": "2026-10-02",
@@ -143,17 +143,20 @@
       "user": {
         "code": "0050",
         "stock": "元大台灣50",
-        "start_price": 112.8
+        "start_price": 112.8,
+        "end_price": 114.95
       },
       "partner": {
         "code": "6278",
         "stock": "台表科",
-        "start_price": 217
+        "start_price": 217,
+        "end_price": 248
       },
       "benchmark": {
         "code": "3189",
         "stock": "景碩",
-        "start_price": 1050
+        "start_price": 1050,
+        "end_price": 1075
       },
       "benchmark_label": "系統"
     }
