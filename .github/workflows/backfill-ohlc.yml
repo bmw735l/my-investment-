@@ -1,4 +1,4 @@
-name: Backfill OHLC History
+name: Backfill OHLC and Institutional History
 on:
   workflow_dispatch:
 permissions:
@@ -9,7 +9,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Backfill
-        run: python3 backfill_ohlc.py
+        run: |
+          python3 backfill_ohlc.py
+          python3 backfill_institutions.py
       - name: Commit history
         run: |
           git config user.name 'github-actions[bot]'
