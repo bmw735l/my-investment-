@@ -735,6 +735,40 @@ function getTechnicalTurnSignal(code, currentStock, history, currentTradeDate, s
     }
   }
 
+  // 第五層量價階段：以前五個完整交易日為基準，避免把盤中量與全日量比較。
+  const baseline = points.slice(-6, -1).map(p => Number(p.stock.volume))
+    .filter(v => Number.isFinite(v) && v > 0);
+  const priorCloses = points.slice(-6, -1).map(p => Number(p.stock.price))
+    .filter(Number.isFinite);
+  if (baseline.length === 5 && priorCloses.length === 5 &&
+      Number.isFinite(curVol) && curVol > 0 && Number.isFinite(Number(cur.price))) {
+    const avgVol = baseline.reduce((a, b) => a + b, 0) / 5;
+    const ratio = curVol / avgVol;
+    const priorHigh = Math.max(...priorCloses);
+    const price = Number(cur.price);
+    const rising = price > Number(prev.price);
+    const breakout = price > priorHigh;
+    if (breakout && ratio >= 1.5 && curResult.percent >= 2) {
+      score += 3;
+      reasons.push("🔥 帶量突破：收盤突破前5日收盤高點，量比" + ratio.toFixed(2) + "倍");
+    } else if (rising && ratio >= 1.2 && curResult.percent < 2) {
+      score += 2;
+      reasons.push("👀 量增試攻：量比" + ratio.toFixed(2) + "倍，尚未達+2%確認門檻");
+    } else if (breakout && ratio < 1.2) {
+      reasons.push("⚠️ 突破但量能不足：量比" + ratio.toFixed(2) + "倍");
+    } else if (!rising && ratio <= 0.8 && price >= Math.min(...priorCloses)) {
+      score += 1;
+      reasons.push("🌱 量縮整理：量比" + ratio.toFixed(2) + "倍，仍守近期收盤低點");
+    } else if (!rising && ratio >= 1.5 && curResult.percent <= -2) {
+      score -= 2;
+      reasons.push("🔴 放量下跌：量比" + ratio.toFixed(2) + "倍");
+    } else {
+      reasons.push("量價未共振：量比" + ratio.toFixed(2) + "倍");
+    }
+  } else {
+    reasons.push("量價階段待累積5個有效交易日");
+  }
+
   // 已經噴太多就不把它當「早期轉折」
   if (curResult.percent > 4) {
     score -= 2;
