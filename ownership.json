@@ -1,7 +1,7 @@
 {
   "source": "https://opendata.tdcc.com.tw/getOD.ashx?id=1-5",
-  "updated": "2026-10-09T02:57+08:00",
-  "latest_date": "2026-10-02",
+  "updated": "2026-10-10T02:27+08:00",
+  "latest_date": "2026-10-08",
   "weeks": {
     "2026-09-24": {
       "stocks": {
@@ -302,6 +302,226 @@
           "over1000_pct": 80.7973,
           "over1000_people": 172,
           "total_people": 350172
+        }
+      }
+    },
+    "2026-10-08": {
+      "stocks": {
+        "6278": {
+          "over400_pct": 68.8559,
+          "over1000_pct": 57.046,
+          "over1000_people": 51,
+          "total_people": 39390
+        },
+        "3665": {
+          "over400_pct": 62.8211,
+          "over1000_pct": 44.2597,
+          "over1000_people": 33,
+          "total_people": 52129
+        },
+        "8358": {
+          "over400_pct": 37.9135,
+          "over1000_pct": 29.3559,
+          "over1000_people": 27,
+          "total_people": 163741
+        },
+        "2313": {
+          "over400_pct": 60.9201,
+          "over1000_pct": 55.2946,
+          "over1000_people": 116,
+          "total_people": 284034
+        },
+        "2368": {
+          "over400_pct": 76.6707,
+          "over1000_pct": 68.0271,
+          "over1000_people": 55,
+          "total_people": 115443
+        },
+        "2301": {
+          "over400_pct": 80.8456,
+          "over1000_pct": 75.0776,
+          "over1000_people": 276,
+          "total_people": 190181
+        },
+        "2317": {
+          "over400_pct": 69.2767,
+          "over1000_pct": 66.5459,
+          "over1000_people": 840,
+          "total_people": 1145174
+        },
+        "3189": {
+          "over400_pct": 76.1078,
+          "over1000_pct": 70.1984,
+          "over1000_people": 58,
+          "total_people": 107846
+        },
+        "3324": {
+          "over400_pct": 60.2654,
+          "over1000_pct": 34.2715,
+          "over1000_people": 9,
+          "total_people": 62207
+        },
+        "6121": {
+          "over400_pct": 66.7866,
+          "over1000_pct": 48.7038,
+          "over1000_people": 29,
+          "total_people": 19944
+        },
+        "6213": {
+          "over400_pct": 67.5124,
+          "over1000_pct": 59.4779,
+          "over1000_people": 36,
+          "total_people": 71416
+        },
+        "3017": {
+          "over400_pct": 67.8633,
+          "over1000_pct": 54.6819,
+          "over1000_people": 59,
+          "total_people": 100389
+        },
+        "3037": {
+          "over400_pct": 79.1849,
+          "over1000_pct": 71.2204,
+          "over1000_people": 203,
+          "total_people": 254212
+        },
+        "6274": {
+          "over400_pct": 64.0957,
+          "over1000_pct": 54.1773,
+          "over1000_people": 50,
+          "total_people": 119017
+        },
+        "2059": {
+          "over400_pct": 64.6,
+          "over1000_pct": 54.4832,
+          "over1000_people": 15,
+          "total_people": 62351
+        },
+        "3081": {
+          "over400_pct": 47.3152,
+          "over1000_pct": 28.6854,
+          "over1000_people": 12,
+          "total_people": 77632
+        },
+        "3653": {
+          "over400_pct": 70.1653,
+          "over1000_pct": 64.0356,
+          "over1000_people": 26,
+          "total_people": 35487
+        },
+        "3363": {
+          "over400_pct": 36.7846,
+          "over1000_pct": 27.8499,
+          "over1000_people": 11,
+          "total_people": 72737
+        },
+        "2308": {
+          "over400_pct": 80.9645,
+          "over1000_pct": 73.9578,
+          "over1000_people": 274,
+          "total_people": 590692
+        },
+        "2344": {
+          "over400_pct": 68.952,
+          "over1000_pct": 65.4395,
+          "over1000_people": 294,
+          "total_people": 558369
+        },
+        "4979": {
+          "over400_pct": 42.3763,
+          "over1000_pct": 26.1036,
+          "over1000_people": 13,
+          "total_people": 87141
+        },
+        "8299": {
+          "over400_pct": 38.5197,
+          "over1000_pct": 28.1736,
+          "over1000_people": 25,
+          "total_people": 204420
+        },
+        "3711": {
+          "over400_pct": 87.1109,
+          "over1000_pct": 81.7292,
+          "over1000_people": 419,
+          "total_people": 323853
+        },
+        "2383": {
+          "over400_pct": 68.5077,
+          "over1000_pct": 55.5533,
+          "over1000_people": 63,
+          "total_people": 123085
+        },
+        "3034": {
+          "over400_pct": 71.5144,
+          "over1000_pct": 59.4954,
+          "over1000_people": 103,
+          "total_people": 90666
+        },
+        "2330": {
+          "over400_pct": 87.5647,
+          "over1000_pct": 84.7866,
+          "over1000_people": 1482,
+          "total_people": 3007088
+        },
+        "6187": {
+          "over400_pct": 54.6148,
+          "over1000_pct": 32.7965,
+          "over1000_people": 15,
+          "total_people": 49161
+        },
+        "3661": {
+          "over400_pct": 35.547,
+          "over1000_pct": 8.6703,
+          "over1000_people": 6,
+          "total_people": 98317
+        },
+        "2303": {
+          "over400_pct": 73.7241,
+          "over1000_pct": 70.9498,
+          "over1000_people": 692,
+          "total_people": 1031979
+        },
+        "6442": {
+          "over400_pct": 57.8463,
+          "over1000_pct": 37.0379,
+          "over1000_people": 10,
+          "total_people": 66515
+        },
+        "0050": {
+          "over400_pct": 25.9487,
+          "over1000_pct": 24.2881,
+          "over1000_people": 273,
+          "total_people": 3565195
+        },
+        "3443": {
+          "over400_pct": 65.4314,
+          "over1000_pct": 52.7531,
+          "over1000_people": 13,
+          "total_people": 50678
+        },
+        "2357": {
+          "over400_pct": 74.5551,
+          "over1000_pct": 65.0125,
+          "over1000_people": 106,
+          "total_people": 110371
+        },
+        "2408": {
+          "over400_pct": 83.7326,
+          "over1000_pct": 81.0424,
+          "over1000_people": 177,
+          "total_people": 345301
+        },
+        "8046": {
+          "over400_pct": 85.6917,
+          "over1000_pct": 81.237,
+          "over1000_people": 46,
+          "total_people": 85988
+        },
+        "2454": {
+          "over400_pct": 73.4614,
+          "over1000_pct": 63.4202,
+          "over1000_people": 239,
+          "total_people": 618964
         }
       }
     }
