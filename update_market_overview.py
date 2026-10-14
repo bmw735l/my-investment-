@@ -26,17 +26,25 @@ def twse_day(date):
  return None
 def institutions(date):
  try:
-  j=get("https://www.twse.com.tw/fund/BFI82U?response=json&dayDate="+date.strftime("%Y%m%d")+"&type=day")
+  j=get("https://www.twse.com.tw/rwd/zh/fund/BFI82U?response=json&dayDate="+date.strftime("%Y%m%d")+"&type=day")
   rows=j.get("data",[])
   vals={}
+  dealers=[]
   for row in rows:
    if len(row)<4:continue
-   name=str(row[0]);value=num(row[-1])
+   name=str(row[0]).replace(" ","").replace("　","")
+   value=num(row[-1])
    if value is None:continue
-   if ("外資及陸資" in name or "外資及陸資(不含外資自營商)" in name) and "自營商" not in name:vals["foreign"]=value
-   elif "投信" in name:vals["trust"]=value
-   elif "自營商" in name and ("合計" in name or name.strip()=="自營商"):vals["dealer"]=value
-  if len(vals)==3:return {"date":date.isoformat(),**vals}
+   if name.startswith("外資及陸資"):
+    vals["foreign"]=value
+   elif name.startswith("投信"):
+    vals["trust"]=value
+   elif name.startswith("自營商"):
+    dealers.append(value)
+  if "foreign" in vals and "trust" in vals and dealers:
+   vals["dealer"]=sum(dealers)
+   return {"date":date.isoformat(),**vals}
+  print("BFI82U incomplete",date.isoformat(),[str(row[0]) for row in rows])
  except Exception as e:print("TWSE institution:",e)
  return None
 def yahoo(symbol):
