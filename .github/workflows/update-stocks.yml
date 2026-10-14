@@ -307,6 +307,9 @@ jobs:
           python3 backfill_ohlc.py
           python3 backfill_institutions.py
 
+      - name: Update V4 market overview
+        run: python3 update_market_overview.py
+
       - name: Capture immutable EES daily snapshot
         run: node snapshot_ees.js
 
@@ -315,7 +318,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add stocks.json history.json ees_snapshots/
+          git add stocks.json history.json market-overview.json ees_snapshots/
 
           if git diff --cached --quiet; then
             echo "No changes"
