@@ -2490,7 +2490,7 @@ showIndustryRotation();
 showAttentionSignals(data.stocks);
 updateEntryCalculator(data.stocks);
 showTradeRecords();    
-    document.getElementById("update-time").textContent = data.updated + "（台北）";
+    document.getElementById("update-time").textContent = "個股交易日 " + (data.trade_date || "未知") + "｜資料更新 " + data.updated + "（台北）";
     console.log("股票資料更新時間：", data.updated);
 
   } catch (error) {
