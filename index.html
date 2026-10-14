@@ -331,7 +331,7 @@ h1 {
 <div class="header">
   <h1>📊 我的投資情報站</h1>
   <div class="subtitle">資料不是答案，整理之後才有判斷。</div>
-  <div class="demo">📡 V2｜台股盤後資料｜資料來源：臺灣證券交易所｜更新時間：<span id="update-time">讀取中...</span></div>
+  <div class="demo">📡 V4｜台股與美股市場情報｜更新時間：<span id="update-time">讀取中...</span></div>
 </div>
 
 <div class="card">
@@ -339,18 +339,16 @@ h1 {
 
   <div class="market-grid">
     <div class="market-item">
-      <div class="label">台股趨勢</div>
-      <div class="value">🟢 偏多</div>
+      <div class="label">大盤收盤</div>
+      <div class="value" id="market-twse">資料更新中</div>
     </div>
-
     <div class="market-item">
-      <div class="label">外資動向</div>
-      <div class="value">🟡 觀察</div>
+      <div class="label">外資／投信／自營商買賣超</div>
+      <div class="value" id="market-institutions" style="font-size:16px;line-height:1.7;">資料更新中</div>
     </div>
-
     <div class="market-item">
-      <div class="label">市場風險</div>
-      <div class="value">🟡 中等</div>
+      <div class="label">美股盤後資訊</div>
+      <div class="value" id="market-us" style="font-size:16px;line-height:1.7;">資料更新中</div>
     </div>
   </div>
 </div>
@@ -2498,6 +2496,35 @@ showTradeRecords();
 
 showPKRecords();
 loadStockData();
+</script>
+<script>
+// V4 market overview: never present stale or unverified market data as current.
+async function renderV4MarketOverview(){
+  const ids=["market-twse","market-institutions","market-us"];
+  const set=(id,html)=>{const el=document.getElementById(id);if(el)el.innerHTML=html;};
+  const fmt=(v,d=2)=>Number(v).toLocaleString("zh-TW",{maximumFractionDigits:d,minimumFractionDigits:d});
+  const delta=v=>Number(v)>0?"#c62828":Number(v)<0?"#16803c":"#475569";
+  try{
+    const res=await fetch("market-overview.json?v="+Date.now(),{cache:"no-store"});
+    if(!res.ok)throw Error("market-overview unavailable");
+    const data=await res.json();
+    const tw=data.twse||{}, inst=data.institutions||{}, us=data.us||{};
+    set("market-twse",tw.close!=null
+      ?'<div style="font-size:22px;font-weight:700;">'+fmt(tw.close)+'</div><div style="color:'+delta(tw.change)+';">'+(tw.change>0?"+":"")+fmt(tw.change)+' 點（'+(tw.pct>0?"+":"")+fmt(tw.pct)+'%）</div><small>交易日 '+tw.date+'</small>'
+      :'<small>大盤收盤資料尚未取得</small>');
+    const names=[["foreign","外資"],["trust","投信"],["dealer","自營商"]];
+    set("market-institutions",names.map(([key,name])=>{
+      const val=inst[key];return '<div>'+name+'：'+(val==null?'尚無資料':'<span style="color:'+delta(val)+';">'+(val>0?"+":"")+fmt(val/1e8)+' 億元</span>')+'</div>';
+    }).join('')+'<small>交易日 '+(inst.date||"待更新")+'｜買賣超金額</small>');
+    const labels=[["nasdaq","Nasdaq"],["sox","費半"],["tsm","台積電ADR"],["nvda","NVIDIA"]];
+    set("market-us",labels.map(([key,name])=>{
+      const q=us[key];return '<div>'+name+'：'+(!q?'尚無資料':'<span style="color:'+delta(q.pct)+';">'+(q.pct>0?"+":"")+fmt(q.pct)+'%</span>')+'</div>';
+    }).join('')+'<small>美股最近收盤｜'+(us.date||"待更新")+'</small>');
+  }catch(err){
+    ids.forEach(id=>set(id,'<small>尚未取得經核實的市場資料，暫不顯示方向判斷</small>'));
+  }
+}
+renderV4MarketOverview();
 </script>
 </body>
 </html>
