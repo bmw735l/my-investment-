@@ -309,6 +309,18 @@ h1 {
 .pk-tech-levels { margin-top:10px; padding-top:10px; border-top:1px dashed #cbd5e1; color:#475569; font-size:16px; }
 .pk-tech-summary { margin-top:10px; padding:10px 12px; border-radius:10px; background:#fff; color:#1e293b; line-height:1.55; }
 @media(max-width:860px) { .pk-technical-grid { grid-template-columns:1fr; } }
+
+/* 走圖第一階段：狀態、條件、下一步 */
+.walk-plan{margin:18px 0;padding:18px;border:1px solid #dbe5ec;border-radius:14px;background:#f8fafc;color:#334155}
+.walk-head,.walk-summary-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.walk-badge{display:inline-block;padding:5px 10px;border-radius:999px;font-size:15px;font-weight:700;margin-left:8px}
+.walk-wait{background:#dbeafe;color:#1e40af}.walk-ready{background:#dcfce7;color:#166534}.walk-weak{background:#ffedd5;color:#9a3412}.walk-neutral{background:#e2e8f0;color:#475569}
+.walk-context,.walk-levels{font-size:16px;margin-top:9px;line-height:1.7}.walk-next{margin-top:12px;padding:12px;border-radius:10px;background:white;color:#0f172a;line-height:1.7}.walk-lack{margin-top:10px;font-size:16px;line-height:1.7}
+.walk-details{margin-top:12px;font-size:15px}.walk-details summary{cursor:pointer;color:#475569}.walk-details li{margin:8px 0}.walk-details ul{padding-left:22px}.walk-details p,.walk-footnote{font-size:14px;color:#64748b;line-height:1.7}
+#walk-conclusion{margin-bottom:18px;padding:18px;border-radius:14px;background:#eff6ff;border:1px solid #bfdbfe}.walk-summary-head span{font-size:14px;color:#475569}.walk-summary-main{font-size:20px;font-weight:700;line-height:1.65}.walk-summary-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.walk-summary-list>div{background:white;border:1px solid #dbeafe;border-radius:12px;padding:14px;min-width:0}.walk-summary-list p{font-size:16px;line-height:1.7;margin:10px 0 0}
+#radar-filters button{padding:9px 12px;border:1px solid #cbd5e1;border-radius:10px;background:white;color:#334155;font:inherit;font-size:16px;cursor:pointer}#radar-filters button[aria-pressed="true"]{background:#1e3a5f;color:white;border-color:#1e3a5f}#radar-filters button:focus-visible,.walk-details summary:focus-visible{outline:3px solid #60a5fa;outline-offset:3px}.walk-filter-empty{padding:20px;background:#f8fafc;border-radius:12px;color:#475569}
+@media(max-width:760px){.walk-summary-list{grid-template-columns:1fr}.walk-plan{padding:14px}.stock-head{gap:12px;flex-wrap:wrap}.card{padding:18px}.walk-badge{margin-left:0}}
+
 </style>
 </head>
 
@@ -345,7 +357,8 @@ h1 {
 
 
 <div class="card focus">
-  <div class="section-title">🧭 今日發現</div>
+  <div class="section-title">🧭 今日情報結論</div>
+  <div id="walk-conclusion" aria-live="polite">正在整理走圖狀態與等待條件…</div>
 
   <div id="one-line-intel" style="margin:14px 0 20px; padding:16px 18px; border:1px solid #dbe4ee; border-radius:14px; background:#f8fafc; line-height:1.7;">
     <div style="font-weight:700; margin-bottom:8px;">🧭 今日一句話情報</div>
@@ -381,12 +394,17 @@ h1 {
 <div class="card">
   <div class="section-title">📡 第11–100檔候選觀察池</div>
   <p style="margin-top:-6px;color:#64748b;">先找變化，再等價格確認。第一版以30檔動態雷達驗證「提早發現」。</p>
-  <div id="radar-filters" style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 16px;">
-    <button type="button" data-radar-filter="all">全部</button>
-    <button type="button" data-radar-filter="seed">🌱 未發動</button>
-    <button type="button" data-radar-filter="move">👀 異動</button>
-    <button type="button" data-radar-filter="strong">🔥 轉強</button>
+  <p class="walk-footnote">依走圖條件分類；情報分數仍沿用原規則。進入口袋名單，不等於立即買進。</p>
+  <div id="radar-filters" role="group" aria-label="觀察池走圖分類" style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 16px;">
+    <button type="button" data-radar-filter="all" aria-pressed="true">全部</button>
+    <button type="button" data-radar-filter="breakout" aria-pressed="false">等待突破</button>
+    <button type="button" data-radar-filter="pullback" aria-pressed="false">回檔觀察</button>
+    <button type="button" data-radar-filter="triggered" aria-pressed="false">條件成立</button>
+    <button type="button" data-radar-filter="weak" aria-pressed="false">轉弱／防守</button>
+    <button type="button" data-radar-filter="watch" aria-pressed="false">持續觀察</button>
+    <button type="button" data-radar-filter="missing" aria-pressed="false">資料不足</button>
   </div>
+  <div id="radar-empty" class="walk-filter-empty" hidden role="status">目前沒有符合這個分類的股票。</div>
   <div id="secondary-watchlist">
     <p>正在載入第二層雷達...</p>
   </div>
@@ -634,6 +652,137 @@ if (signal) {
     el.textContent = "— 0.00%";
   }
 }
+/* 第一階段走圖：只用評估日及以前的行情；不改選股分數或PK。 */
+const walkStatus = {
+  breakout: {label:'等待突破', tone:'wait'},
+  pullback: {label:'回檔觀察', tone:'wait'},
+  triggered: {label:'進場條件成立', tone:'ready'},
+  weak: {label:'轉弱／防守', tone:'weak'},
+  watch: {label:'持續觀察', tone:'neutral'},
+  missing: {label:'資料不足', tone:'neutral'}
+};
+function walkEscape(value) {
+  return String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function walkNumber(value) {
+  if (value === null || value === undefined || String(value).trim() === '') return null;
+  const n = Number(String(value).replace(/,/g,''));
+  return Number.isFinite(n) ? n : null;
+}
+function getWalkPlan(code, stock, history, asOfDate) {
+  const missing = reason => ({status:'missing',trend:'尚待確認',position:reason,next:'等待連續行情補齊，再確認價格與進場條件。',lack:reason,gates:[],date:asOfDate});
+  if (!asOfDate || !stock || !(walkNumber(stock.price)>0)) return missing('缺少評估日期或有效收盤價');
+  const dates = Object.keys(history || {}).filter(d=>d<=asOfDate);
+  if (!dates.includes(asOfDate)) dates.push(asOfDate);
+  dates.sort();
+  const num = s => ({price:walkNumber(s?.price),open:walkNumber(s?.open),high:walkNumber(s?.high),low:walkNumber(s?.low),volume:walkNumber(s?.volume)});
+  const series = dates.map(date=>({date,...num(date===asOfDate ? stock : history[date]?.stocks?.[code])}));
+  // Missing market sessions break the calculation; never stitch separated observations into a daily MA.
+  let start=series.length-1;
+  while(start>=0 && series[start].price>0) start--;
+  const a=series.slice(start+1), n=a.length;
+  if(n<21) return missing('連續行情 '+n+'/21 個交易日；尚無完整20日均線方向');
+  const avg=xs=>xs.reduce((s,x)=>s+x,0)/xs.length;
+  const p=a.map(x=>x.price), last=a[n-1], prev=a[n-2];
+  const ma=(size,end=n)=>avg(p.slice(end-size,end));
+  const ma5=ma(5),ma10=ma(10),ma20=ma(20), old5=ma(5,n-1),old10=ma(10,n-1),old20=ma(20,n-1);
+  const candleOK=x=>x.open>0 && x.high>0 && x.low>0 && x.low<=Math.min(x.open,x.price) && x.high>=Math.max(x.open,x.price);
+  const ohlcOK=a.slice(-21).every(candleOK);
+  const recent=a.slice(-21,-1), rangeHigh=ohlcOK?Math.max(...recent.map(x=>x.high)):Math.max(...recent.map(x=>x.price));
+  const rangeLow=ohlcOK?Math.min(...recent.map(x=>x.low)):Math.min(...recent.map(x=>x.price));
+  const highs=[], lows=[];
+  if(ohlcOK) for(let i=Math.max(2,n-60);i<n-3;i++) {
+    const x=a[i], neighbors=[a[i-2],a[i-1],a[i+1],a[i+2]];
+    if(neighbors.every(y=>x.high>y.high))highs.push(x.high);
+    if(neighbors.every(y=>x.low<y.low))lows.push(x.low);
+  }
+  const h=highs.at(-1), l=lows.at(-1), h0=highs.at(-2), l0=lows.at(-2);
+  const higherLow=l!=null && l0!=null && l>l0;
+  const higherHigh=h!=null && h0!=null && h>h0;
+  const bullish=ma5>ma10 && ma10>ma20 && ma5>old5 && ma10>old10 && ma20>old20 && last.price>ma20;
+  const bearish=ma5<ma10 && ma10<ma20 && ma20<old20 && last.price<ma20;
+  const resistance=h ?? rangeHigh, support=l ?? rangeLow;
+  const volumeOK=a.slice(-6).every(x=>x.volume>0);
+  const volRatio=volumeOK?last.volume/avg(a.slice(-6,-1).map(x=>x.volume)):null;
+  const volumePass=volumeOK && (last.volume>prev.volume*1.5 || volRatio>1);
+  // Standard 9-day stochastic K/D; only valid OHLC windows contribute.
+  let k=50,d=50,oldK=null,oldD=null,kd=null;
+  if(ohlcOK) {
+    const valid=a.every(candleOK)?a:a.slice(-21);
+    for(let i=8;i<valid.length;i++) {
+      const w=valid.slice(i-8,i+1), hi=Math.max(...w.map(x=>x.high)),lo=Math.min(...w.map(x=>x.low));
+      const rsv=hi===lo?50:(valid[i].price-lo)/(hi-lo)*100;
+      oldK=k;oldD=d;k=k*2/3+rsv/3;d=d*2/3+k/3;
+    }
+    kd={k,d,rising:k>oldK,golden:oldK<=oldD&&k>d,pass:k>oldK||k>d};
+  }
+  // MACD 12/26/9 with SMA seeds; insufficient warmup stays unavailable.
+  let macd=null;
+  if(n>=35) {
+    let fast=avg(p.slice(0,12)),slow=avg(p.slice(0,26)),signal=null,diffs=[],histograms=[];
+    for(let i=12;i<n;i++) {
+      fast=fast+(p[i]-fast)*2/13;
+      if(i<25)continue;
+      if(i>25)slow=slow+(p[i]-slow)*2/27;
+      const diff=fast-slow;diffs.push(diff);
+      if(diffs.length===9)signal=avg(diffs);
+      else if(diffs.length>9)signal=signal+(diff-signal)*2/10;
+      if(signal!==null)histograms.push(diff-signal);
+    }
+    if(histograms.length>=2) {
+      const now=histograms.at(-1),before=histograms.at(-2);
+      macd={now,before,pass:now>before};
+    }
+  }
+  const indicatorPass=Boolean(kd?.pass||macd?.pass);
+  const red=candleOK(last)&&last.price>last.open;
+  const initial=red && higherLow && h!=null && last.price>h && prev.price<=h;
+  const rangeBreak=red && last.price>rangeHigh && prev.price<=rangeHigh;
+  const pullback=red && (higherLow||higherHigh) && prev.price<=old5 && last.price>ma5 && last.price>prev.high;
+  const pattern=initial?'多頭確認':rangeBreak?'區間突破':pullback?'回檔再起':null;
+  const trend=higherHigh&&higherLow?'頭頭高、底底高':bullish?'均線偏多，轉折結構待確認':bearish?'均線偏空':'多空整理／趨勢待確認';
+  const gates=[
+    {name:'價格型態',pass:ohlcOK?Boolean(pattern):null,detail:ohlcOK?(pattern||'尚未出現確認K棒'):'開高低收資料不足'},
+    {name:'均線確認',pass:bullish,detail:'5／10／20日均線向上且多排，收盤在20日線上'},
+    {name:'量能確認',pass:volumeOK?volumePass:null,detail:volumeOK?'當日／前5日量比 '+volRatio.toFixed(2)+'；量大於昨量1.5倍或前5日均量':'缺少連續6日成交量'},
+    {name:'KD／MACD',pass:kd||macd?indicatorPass:null,detail:'至少一項支持多方；'+(kd?'KD '+k.toFixed(1)+'／'+d.toFixed(1):'KD資料不足')+'；'+(macd?'MACD '+(macd.pass?'動能改善':'動能未改善'):'MACD暖機不足')}
+  ];
+  let status='watch';
+  if(last.price<support || bearish || (last.price<ma20 && ma20<old20))status='weak';
+  else if(pattern && bullish && volumePass && indicatorPass && ohlcOK)status='triggered';
+  else if(last.price>ma20 && (last.price<ma5 || last.price<prev.price))status='pullback';
+  else if(last.price>=ma20)status='breakout';
+  const fmt=x=>x.toFixed(2), above=last.price>=resistance;
+  const lack=gates.filter(x=>x.pass!==true).map(x=>x.name+(x.pass===null?'資料不足':'未成立')).join('、')||'目前四項條件皆成立；下一交易日仍須確認價格';
+  const next=status==='triggered'?'評估日收盤符合'+pattern+'條件；下一交易日觀察是否守住 '+fmt(resistance)+'，重新檢查價格與風險。':
+    status==='weak'?'先觀察能否收復20日線 '+fmt(ma20)+'；支撐 '+fmt(support)+' 若失守，續弱風險增加。':
+    status==='pullback'?'觀察支撐 '+fmt(support)+' 與20日線 '+fmt(ma20)+'；等待收盤站回5日線 '+fmt(ma5)+' 並超過前日高 '+(prev.high?fmt(prev.high):'（資料不足）')+'。':
+    status==='breakout'?(above?'價格已越過參考壓力 '+fmt(resistance)+'，等待其餘條件確認。':'等待收盤突破參考壓力 '+fmt(resistance)+'，並確認均線、量能與指標。'):
+    '觀察 '+fmt(support)+'～'+fmt(resistance)+' 區間與20日線 '+fmt(ma20)+'，等待明確方向。';
+  return {status,trend,position:(above?'已越過':'距參考壓力')+(above?' '+fmt(resistance):' '+((resistance/last.price-1)*100).toFixed(1)+'%')+'｜'+(h!=null?'已確認轉折':'前20日區間')+'參考',next,lack,gates,date:asOfDate,ma5,ma10,ma20,resistance,support,pattern,volRatio,kd,macd,ohlcOK,n};
+}
+function renderWalkPlan(plan, compact=false) {
+  const meta=walkStatus[plan.status], e=walkEscape;
+  const levels=plan.ma20?'<div class="walk-levels">參考支撐 '+plan.support.toFixed(2)+'｜參考壓力 '+plan.resistance.toFixed(2)+'｜20日線 '+plan.ma20.toFixed(2)+'</div>':'';
+  return '<section class="walk-plan" aria-label="走圖狀態與等待條件">'+
+    '<div class="walk-head"><strong>🧭 走圖狀態</strong><span class="walk-badge walk-'+meta.tone+'">'+meta.label+'</span></div>'+
+    '<div class="walk-context">'+e(plan.trend)+'｜'+e(plan.position)+'</div>'+levels+
+    '<div class="walk-next"><strong>下一步｜</strong>'+e(plan.next)+'</div>'+
+    '<div class="walk-lack"><strong>尚缺條件｜</strong>'+e(plan.lack)+'</div>'+
+    (!compact?'<details class="walk-details"><summary>查看進場條件與資料範圍</summary><ul>'+plan.gates.map(x=>'<li><strong>'+(x.pass===null?'？ 資料不足':x.pass?'✓ 成立':'○ 等待')+'｜'+e(x.name)+'</strong>：'+e(x.detail)+'</li>').join('')+'</ul><p>評估日 '+e(plan.date)+'；僅用此前資料。轉折採左右各2根K棒確認；不足時用前20日區間參考。量價與指標只作條件確認；未計算背離、季線或回測勝率。進場條件成立仍須自行設定可承擔的風險。</p></details>':'')+'</section>';
+}
+function showWalkConclusion(stockData, picks, history, date) {
+  const el=document.getElementById('walk-conclusion');if(!el)return;
+  const plans=Object.entries(secondaryWatchlistConfig).map(([code])=>({code,plan:getWalkPlan(code,stockData[code],history,date)}));
+  const count=s=>plans.filter(x=>x.plan.status===s).length;
+  const triggered=count('triggered'),weak=count('weak');
+  el.innerHTML='<div class="walk-summary-head"><strong>🎯 今日行動結論</strong><span>盤後評估日 '+walkEscape(date)+'｜非即時行情</span></div>'+
+    '<p class="walk-summary-main">'+(triggered?'觀察池有 '+triggered+' 檔進場條件成立，先確認位置與風險。':'觀察池目前沒有完整進場訊號，先等待價格與條件確認。')+(weak?'另有 '+weak+' 檔轉弱，優先檢查支撐。':'')+'</p>'+
+    '<div class="walk-summary-list">'+(picks||[]).slice(0,3).map(x=>{const p=getWalkPlan(x.code,stockData[x.code],history,date);return '<div><strong>'+walkEscape(x.name||stockData[x.code]?.name||x.code)+'</strong><span class="walk-badge walk-'+walkStatus[p.status].tone+'">'+walkStatus[p.status].label+'</span><p>'+walkEscape(p.next)+'</p></div>';}).join('')+'</div>'+
+    '<p class="walk-footnote">口袋名單代表值得追蹤；排名與單日±2%變化不等於買點。'+count('missing')+' 檔歷史不足，等待資料補齊。</p>';
+}
+
+
 function formatInstitutionText(value) {
   const n = Number(String(value).replace(/,/g, ""));
   if (!Number.isFinite(n)) return "--";
@@ -878,6 +1027,7 @@ async function showFocusStockCards(stockData, systemPicks, history, currentTrade
           '<div class="data-box"><div class="label">趨勢</div><div class="value">' +
             getTrendText(item.code, stock, history, currentTradeDate) + '</div></div>' +
         '</div>' +
+        renderWalkPlan(getWalkPlan(item.code, stock, history, currentTradeDate)) +
         (() => {
           const dates = Object.keys(history || {}).sort();
           const prevDate = dates.filter(d => d < currentTradeDate).slice(-1)[0];
@@ -1507,6 +1657,7 @@ function showMyWatchlist(stockData, previousStocks = {}, history = {}, currentTr
       stockConfig[selectedCode].group +
     "</div>" +
 
+    renderWalkPlan(getWalkPlan(selectedCode, stock, history, currentTradeDate)) +
     (() => {
       const six = getSixLayerAnalysis(selectedCode, stock, stockData, previousStocks, history, currentTradeDate);
       const techReasons = six.technical.reasons.slice(0, 3).join("、");
@@ -2232,7 +2383,7 @@ function showThousandRadar(stockData) {
   el.innerHTML = html;
 }
 
-function showSecondaryWatchlist(stockData) {
+function showSecondaryWatchlist(stockData, history = {}, currentTradeDate = null) {
   const el = document.getElementById("secondary-watchlist");
   if (!el) return;
 
@@ -2240,8 +2391,8 @@ function showSecondaryWatchlist(stockData) {
 
   const rows = Object.entries(secondaryWatchlistConfig).map(([code, config]) => {
     const stock = stockData?.[code];
-    if (!stock) return { code, config, status:"waiting", score:0, html:
-      '<div class="watchlist-card radar-row" data-status="waiting"><div class="watchlist-title"><strong>' +
+    if (!stock) return { code, config, status:"missing", score:0, html:
+      '<div class="watchlist-card radar-row" data-status="missing"><div class="watchlist-title"><strong>' +
       config.name + ' ' + code + '</strong><span class="info-score">等待資料</span></div>' +
       '<div class="pick-group">' + config.group + '</div><div class="pick-block">' + config.note + '</div></div>' };
 
@@ -2264,12 +2415,15 @@ function showSecondaryWatchlist(stockData) {
     else if (score >= 60) { status = "move"; label = "👀 異動"; }
     else if (Math.abs(r.percent) < 2 && net > 0 && relative > 0) { status = "seed"; label = "🌱 未發動"; }
 
+    const plan = getWalkPlan(code, stock, history, currentTradeDate);
+    status = plan.status;
     const direction = r.percent >= 2 ? "🟢 明確轉強" :
                       r.percent <= -2 ? "🔴 明確轉弱" : "🟡 ±2%內";
     const html = '<div class="watchlist-card radar-row" data-status="' + status + '">' +
       '<div class="watchlist-title"><strong>' + config.name + ' ' + code + '</strong>' +
       '<span class="info-score">' + score + '分｜' + label + '</span></div>' +
       '<div class="pick-group">' + config.group + '</div>' +
+      renderWalkPlan(plan, true) +
       '<div class="data-row">' +
         '<div class="data-box"><div class="label">收盤</div><div class="value">' + stock.price + '</div></div>' +
         '<div class="data-box"><div class="label">漲跌</div><div class="value">' +
@@ -2286,16 +2440,27 @@ function showSecondaryWatchlist(stockData) {
   el.innerHTML = rows.map(x => x.html).join("");
 
   const filterBox = document.getElementById("radar-filters");
-  if (filterBox && !filterBox.dataset.bound) {
-    filterBox.dataset.bound = "1";
-    filterBox.addEventListener("click", e => {
-      const btn = e.target.closest("button[data-radar-filter]");
-      if (!btn) return;
-      const filter = btn.dataset.radarFilter;
-      document.querySelectorAll("#secondary-watchlist .radar-row").forEach(row => {
-        row.style.display = (filter === "all" || row.dataset.status === filter) ? "" : "none";
-      });
+  if (filterBox) {
+    const buttons=Array.from(filterBox.querySelectorAll('button[data-radar-filter]'));
+    buttons.forEach(btn=>{
+      const key=btn.dataset.radarFilter;
+      const label=key==='all'?'全部':walkStatus[key].label;
+      btn.textContent=label+' '+(key==='all'?rows.length:rows.filter(x=>x.status===key).length);
     });
+    const applyFilter=filter=>{
+      let shown=0;
+      document.querySelectorAll('#secondary-watchlist .radar-row').forEach(row=>{
+        const visible=filter==='all'||row.dataset.status===filter;
+        row.hidden=!visible;if(visible)shown++;
+      });
+      buttons.forEach(btn=>btn.setAttribute('aria-pressed',String(btn.dataset.radarFilter===filter)));
+      document.getElementById('radar-empty').hidden=shown>0;
+    };
+    filterBox.onclick=e=>{
+      const btn=e.target.closest('button[data-radar-filter]');
+      if(!btn)return;filterBox.dataset.active=btn.dataset.radarFilter;applyFilter(btn.dataset.radarFilter);
+    };
+    applyFilter(filterBox.dataset.active||'all');
   }
 }
 
@@ -2473,7 +2638,8 @@ const previousStocks =
 showDailySummary(data.stocks, systemPicks);
 showThousandRadar(data.stocks);
 showMyWatchlist(data.stocks, previousStocks, history, currentTradeDate);
-showSecondaryWatchlist(data.stocks);
+showSecondaryWatchlist(data.stocks, history, currentTradeDate);
+showWalkConclusion(data.stocks, systemPicks, history, currentTradeDate);
 showIndustryRanking(data.stocks);
 showIndustryRotation();
 showPKOwnership(data.stocks, history, currentTradeDate);
@@ -2495,3 +2661,4 @@ loadStockData();
 </script>
 </body>
 </html>
+
