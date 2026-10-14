@@ -1,6 +1,6 @@
 {
   "version": 3,
-  "updated": "2026-10-08 收盤結算",
+  "updated": "2026-10-08 第五戰正式選股",
   "technical_snapshot_date": "2026-10-06 收盤",
   "technical_cards": [
     {
@@ -159,6 +159,34 @@
         "end_price": 1075
       },
       "benchmark_label": "系統"
+    },
+    {
+      "round": 5,
+      "status": "open",
+      "signal_date": "2026-10-08",
+      "start_date": "2026-10-09",
+      "end_date": "2026-10-15",
+      "start_price_date": "2026-10-08",
+      "user": {
+        "code": "2408",
+        "stock": "南亞科",
+        "start_price": 532,
+        "reason": "突破確認、均線向上，目標550元"
+      },
+      "partner": {
+        "code": "2357",
+        "stock": "華碩",
+        "start_price": 996,
+        "reason": "價格結構與相對強弱改善，試攻階段"
+      },
+      "benchmark": {
+        "code": "3653",
+        "stock": "健策",
+        "start_price": 7165,
+        "reason": "EES 75分，量價法人同步改善，試攻階段"
+      },
+      "benchmark_label": "EES系統",
+      "ees_snapshot_date": "2026-10-08"
     }
   ]
 }
