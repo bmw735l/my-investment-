@@ -18,7 +18,7 @@ def twse_day(date):
   for row in reversed(rows):
    if len(row)<5:continue
    date_str=str(row[0])
-   if date_str.split("/")[-1]!=str(date.day):continue
+   if date_str.split("/")[-1].lstrip("0")!=str(date.day) or date_str.split("/")[1].lstrip("0")!=str(date.month):continue
    close=num(row[4]);change=num(row[5]) if len(row)>5 else None
    if close is not None and change is not None:
     return {"date":date.isoformat(),"close":close,"change":change,"pct":round(100*change/(close-change),3) if close!=change else None}
@@ -33,10 +33,10 @@ def institutions(date):
    if len(row)<4:continue
    name=str(row[0]);value=num(row[-1])
    if value is None:continue
-   if "外資及陸資" in name and "自營商" not in name:vals["foreign"]=value
+   if ("外資及陸資" in name or "外資及陸資(不含外資自營商)" in name) and "自營商" not in name:vals["foreign"]=value
    elif "投信" in name:vals["trust"]=value
-   elif "自營商" in name and "合計" in name:vals["dealer"]=value
-  if len(vals)>=2:return {"date":date.isoformat(),**vals}
+   elif "自營商" in name and ("合計" in name or name.strip()=="自營商"):vals["dealer"]=value
+  if len(vals)==3:return {"date":date.isoformat(),**vals}
  except Exception as e:print("TWSE institution:",e)
  return None
 def yahoo(symbol):
@@ -45,7 +45,7 @@ def yahoo(symbol):
   j=get("https://query1.finance.yahoo.com/v8/finance/chart/"+q+"?range=5d&interval=1d")
   r=j["chart"]["result"][0];closes=[x for x in r["indicators"]["quote"][0]["close"] if x is not None]
   if len(closes)<2:return None
-  return {"pct":round((closes[-1]/closes[-2]-1)*100,3),"close":round(closes[-1],3),"date":datetime.datetime.fromtimestamp(r["timestamp"][-1],datetime.timezone.utc).date().isoformat()}
+  return {"pct":round((closes[-1]/closes[-2]-1)*100,3),"close":round(closes[-1],3),"date":datetime.datetime.fromtimestamp(r["timestamp"][-1],ZoneInfo("America/New_York")).date().isoformat()}
  except Exception as e:print("Yahoo",symbol,e);return None
 try:
  with open("market-overview.json",encoding="utf8") as f:old=json.load(f)
@@ -58,8 +58,13 @@ for offset in range(8):
  idx=twse_day(d)
  if idx:
   if not out.get("twse") or idx["date"]>=out["twse"].get("date",""):out["twse"]=idx
-  inst=institutions(d)
-  if inst and (not out.get("institutions") or inst["date"]>=out["institutions"].get("date","")):out["institutions"]=inst
+  break
+for offset in range(8):
+ d=today-datetime.timedelta(days=offset)
+ if d.weekday()>=5:continue
+ inst=institutions(d)
+ if inst:
+  if not out.get("institutions") or inst["date"]>=out["institutions"].get("date",""):out["institutions"]=inst
   break
 us={}
 for key,symbol in {"nasdaq":"^IXIC","sox":"^SOX","tsm":"TSM","nvda":"NVDA"}.items():
