@@ -763,7 +763,13 @@ function showWalkConclusion(stockData, picks, history, date) {
   const plans=Object.entries(secondaryWatchlistConfig).map(([code])=>({code,plan:getWalkPlan(code,stockData[code],history,date)}));
   const count=s=>plans.filter(x=>x.plan.status===s).length;
   const triggered=count('triggered'),weak=count('weak');
+  // Use the same daily headline as the one-line intelligence block;
+  // walk analysis is a separate entry-condition assessment, not a conflicting market verdict.
+  const sharedHeadline=document.getElementById('intel-shared-headline')?.textContent?.replace(/^今日｜/, '').trim();
   el.innerHTML='<div class="walk-summary-head"><strong>🎯 今日行動結論</strong><span>盤後評估日 '+walkEscape(date)+'｜非即時行情</span></div>'+
+    (sharedHeadline?'<p class="walk-summary-main">'+walkEscape(sharedHeadline)+'</p>':'')+
+    '<div style="font-weight:700;margin-top:12px;">📐 技術進場條件（獨立於市場摘要）</div>'+
+    '<p class="walk-footnote">以下是觀察池的技術條件統計，不代表大盤方向。</p>'+
     '<p class="walk-summary-main">'+(triggered?'觀察池有 '+triggered+' 檔進場條件成立，先確認位置與風險。':'觀察池目前沒有完整進場訊號，先等待價格與條件確認。')+(weak?'另有 '+weak+' 檔轉弱，優先檢查支撐。':'')+'</p>'+
     '<div class="walk-summary-list">'+(picks||[]).slice(0,3).map(x=>{const p=getWalkPlan(x.code,stockData[x.code],history,date);return '<div><strong>'+walkEscape(x.name||stockData[x.code]?.name||x.code)+'</strong><span class="walk-badge walk-'+walkStatus[p.status].tone+'">'+walkStatus[p.status].label+'</span><p>'+walkEscape(p.next)+'</p></div>';}).join('')+'</div>'+
     '<p class="walk-footnote">口袋名單代表值得追蹤；排名與單日±2%變化不等於買點。'+count('missing')+' 檔歷史不足，等待資料補齊。</p>';
@@ -1455,7 +1461,7 @@ function showOneLineIntel(stockData, previousStocks = {}) {
   el.innerHTML =
     '<div style="font-weight:700; margin-bottom:8px;">🧭 今日一句話情報</div>' +
     '<div style="font-size:0.96em; margin-bottom:8px;"><strong>昨日｜</strong>' + yesterdayText + '</div>' +
-    '<div style="font-size:1.12em; font-weight:700; margin-bottom:10px;"><strong>今日｜</strong>' + todayText + '</div>' +
+    '<div id="intel-shared-headline" style="font-size:1.12em; font-weight:700; margin-bottom:10px;"><strong>今日｜</strong>' + todayText + '</div>' +
     '<div style="font-size:0.96em;">' +
       '<div>' + marketLine + '</div>' +
       '<div>' + weightLine + '</div>' +
