@@ -1,0 +1,32 @@
+name: Refresh V4 Market Overview
+
+on:
+  workflow_dispatch:
+  schedule:
+    # 08:00 and 16:20 Asia/Taipei, weekdays
+    - cron: '0 0 * * 1-5'
+    - cron: '20 8 * * 1-5'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: v4-market-overview
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Retrieve TWSE and Yahoo closing data
+        run: python3 update_market_overview.py
+      - name: Commit verified market data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add market-overview.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Refresh V4 market overview"
+            git push
+          fi
