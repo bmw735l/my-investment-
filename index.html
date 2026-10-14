@@ -47,7 +47,7 @@
   line-height: 1.7;
   color: #334155;
 }
-/* 我的自選 3 檔－淺色情報卡 */
+/* 觀察池卡片 */
 .watchlist-card {
   background: #f8fafc;
   border: 1px solid #e2e8f0;
@@ -381,13 +381,6 @@ h1 {
   <div class="card">
     <div class="section-title">🔎 系統發現 3 檔</div>
     <p>正在從情報觀察池找出最值得注意的變化...</p>
-  </div>
-</div>
-
-<div class="card">
-  <div class="section-title">❤️ 我的自選 3 檔</div>
-  <div id="my-watchlist">
-    <p>正在載入自選股票...</p>
   </div>
 </div>
 
@@ -1536,172 +1529,6 @@ function showIndustryRanking(stockData) {
 
   el.innerHTML = html;
 }
-function showMyWatchlist(stockData, previousStocks = {}, history = {}, currentTradeDate = null) {
-  const el = document.getElementById("my-watchlist");
-  if (!el) return;
-
-  const codes = Object.keys(stockConfig).filter(code => stockData[code]);
-
-  let saved = [];
-  try {
-    saved = JSON.parse(localStorage.getItem("myWatchlist") || "[]");
-  } catch (e) {
-    saved = [];
-  }
-
-  saved = saved.filter(code => codes.includes(code)).slice(0, 3);
-
-  if (saved.length === 0) {
-    saved = ["2330", "2408", "2308"].filter(code => codes.includes(code));
-  }
-
-  while (saved.length < 3 && codes.length > saved.length) {
-    const nextCode = codes.find(code => !saved.includes(code));
-    if (!nextCode) break;
-    saved.push(nextCode);
-  }
-
-  localStorage.setItem("myWatchlist", JSON.stringify(saved));
-
-  let html = "<strong>❤️ 我的自選 3 檔</strong>";
-
-  saved.forEach((selectedCode, index) => {
-    html +=
-      '<div class="watchlist-item" style="margin-top:12px;">' +
-      "<strong>" + (index + 1) + ".</strong> " +
-      '<select class="watchlist-select" data-index="' + index + '">';
-
-    codes.forEach(code => {
-      const config = stockConfig[code];
-      const selected = code === selectedCode ? " selected" : "";
-
-      html +=
-        '<option value="' + code + '"' + selected + ">" +
-        config.name + " " + code +
-        "</option>";
-    });
-
-    html += "</select>";
-
-    const stock = stockData[selectedCode];
-
-    if (stock) {
-      const info = getInformationScore(stock);
-      const previousStock = previousStocks[selectedCode];
-
-    if (previousStock) {
-      const previousResult = getStockScore(previousStock);
-      const currentResult = getStockScore(stock);
-
-      const previousNet =
-        previousResult.foreign + previousResult.trust;
-
-      const currentNet =
-        currentResult.foreign + currentResult.trust;
-
-   if (previousNet < 0 && currentNet > 0) {
-     info.infoScore += 2;
-     info.reasons.push("法人由賣轉買");
-   } else if (previousNet > 0 && currentNet < 0) {
-     info.infoScore += 2;
-     info.reasons.push("法人由買轉賣");
-   }
-
-   if (previousResult.score <= -2 && currentResult.score >= 2) {
-     info.infoScore += 2;
-     info.reasons.push("個股由弱轉強");
-   } else if (
-     previousResult.score >= 2 &&
-     currentResult.score <= -2
-   ) {
-     info.infoScore += 2;
-     info.reasons.push("個股由強轉弱");
-   }
- }
-  const coreReasons = info.reasons.filter(reason =>
-    reason.includes("由弱轉強") ||
-    reason.includes("由強轉弱") ||
-    reason.includes("由賣轉買") ||
-    reason.includes("由買轉賣") ||
-    reason.includes("技術轉折")
-  );
-
-  const todayReasons = info.reasons.filter(reason =>
-    !coreReasons.includes(reason)
-  );
-
-  const coreText =
-    coreReasons.length > 0
-      ? coreReasons.map(reason => "• " + reason).join("<br>")
-      : "• 目前無明顯核心變化";
-
-  const signalText =
-    todayReasons.length > 0
-      ? todayReasons.map(reason => "• " + reason).join("<br>")
-      : "• 今日無明顯訊號";
-
-  html +=
-  "<div class='watchlist-card'>" +
-    "<div class='watchlist-title'>" +
-      "<strong>" +
-        stockConfig[selectedCode].name + " " + selectedCode +
-      "</strong>" +
-      "<span class='info-score'>情報值 " + info.infoScore + "</span>" +
-    "</div>" +
-
-    "<div class='pick-group'>族群：" +
-      stockConfig[selectedCode].group +
-    "</div>" +
-
-    renderWalkPlan(getWalkPlan(selectedCode, stock, history, currentTradeDate)) +
-    (() => {
-      const six = getSixLayerAnalysis(selectedCode, stock, stockData, previousStocks, history, currentTradeDate);
-      const techReasons = six.technical.reasons.slice(0, 3).join("、");
-      return "<div class='pick-block'><strong>🧭 六層判讀</strong><br>" +
-        "① 產業變化｜" + six.industry + "<br>" +
-        "② 法人/資金｜" + six.institution + "<br>" +
-        "③ 籌碼變化｜" + six.chip + "<br>" +
-        "④ 相對強弱｜" + six.relative + "<br>" +
-        "⑤ 技術面確認｜" + six.technical.label + (techReasons ? "｜" + techReasons : "") + "<br>" +
-        "⑥ 價格｜" + six.price + "</div>";
-    })() +
-    "<div class='pick-block'>" +
-      "<strong>🎯 核心變化</strong><br>" +
-      coreText +
-    "</div>" +
-
-    "<div class='pick-block'>" +
-      "<strong>📊 今日訊號</strong><br>" +
-      signalText +
-    "</div>" +
-  "</div>";
-}
-       
-    html += "</div>";
-  });
-
-  el.innerHTML = html;
-
-  el.querySelectorAll(".watchlist-select").forEach(select => {
-    select.addEventListener("change", event => {
-      const index = Number(event.target.dataset.index);
-      const newCode = event.target.value;
-
-      const updated = [...saved];
-
-      if (updated.includes(newCode)) {
-        event.target.value = saved[index];
-        alert("這檔股票已經在你的自選 3 檔中。");
-        return;
-      }
-
-      updated[index] = newCode;
-      localStorage.setItem("myWatchlist", JSON.stringify(updated));
-
-      showMyWatchlist(stockData, previousStocks, history, currentTradeDate);
-    });
-  });
-}  
 async function showIndustryRotation() {
   const el = document.getElementById("industry-rotation");
   if (!el) return;
@@ -2650,7 +2477,7 @@ const previousStocks =
 
 showDailySummary(data.stocks, systemPicks);
 showThousandRadar(data.stocks);
-showMyWatchlist(data.stocks, previousStocks, history, currentTradeDate);
+
 showSecondaryWatchlist(data.stocks, history, currentTradeDate);
 showWalkConclusion(data.stocks, systemPicks, history, currentTradeDate);
 showIndustryRanking(data.stocks);
