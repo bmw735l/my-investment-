@@ -1745,15 +1745,15 @@ async function showPKRecords() {
       const leaderText = values.length < 3 ? "資料未齊，待確認" :
         winners.length > 1 ? "並列：" + winners.map(k=>k==="user"?"我":k==="partner"?"伙計":"第三方").join("、") :
         (winners[0] === "user" ? "👤 我" : winners[0] === "partner" ? "🤖 伙計" : "📊 第三方");
-      const leaderCell = (isClosed ? "勝方｜" : "暫時領先｜") + leaderText;
+      const leaderCell = (isClosed ? "勝方｜" : "🏆 暫時領先｜") + leaderText;
 
-      const thirdLabel = record.benchmark_label === "系統"
-        ? "⭐ " + (record.benchmark?.stock || "系統")
+      const thirdLabel = ["系統","EES系統"].includes(record.benchmark_label)
+        ? "⭐ " + (record.benchmark_label === "EES系統" ? "EES " : "") + (record.benchmark?.stock || "系統")
         : "📊 " + (record.benchmark?.stock || "0050");
 
       return (
-        "<tr>" +
-          "<td>第 " + record.round + " 戰" + (isClosed ? "" : "<br><small>進行中</small>") + "</td>" +
+        "<tr" + (!isClosed ? ' style="background:#eff6ff;"' : "") + ">" +
+          "<td>第 " + record.round + " 戰" + (isClosed ? "" : "<br><small>進行中｜暫時領先榜</small>") + "</td>" +
           "<td>👤 " + (record.user?.stock || "-") + "<br><strong>" + formatPKReturn(userReturn) + "</strong></td>" +
           "<td>🤖 " + (record.partner?.stock || "-") + "<br><strong>" + formatPKReturn(partnerReturn) + "</strong></td>" +
           "<td>" + thirdLabel + "<br><strong>" + formatPKReturn(thirdReturn) + "</strong></td>" +
