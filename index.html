@@ -388,8 +388,8 @@ h1 {
 
 <div class="card" id="ees-pool-hub">
   <div class="section-title">🌱 EES × 30檔觀察池</div>
-  <p style="color:#64748b;font-size:14px">EES 搜尋早期發動候選，再推薦納入30檔；推薦不自動更換季度名單。</p>
-  <div class="ees-tabs" role="group" aria-label="切換EES與觀察池"><button type="button" id="ees-tab-discover" aria-pressed="true">🌱 EES 新發現</button><button type="button" id="ees-tab-pool" aria-pressed="false">📡 我的30檔</button></div>
+  <p style="color:#64748b;font-size:14px">每季以產業輪動與 EES 評估全市場，選定當季30檔；季度內名單固定，每日只更新量價、法人與 EES 訊號。現階段全市場資料來源尚待擴充。</p>
+  <div class="ees-tabs" role="group" aria-label="切換EES與觀察池"><button type="button" id="ees-tab-discover" aria-pressed="true">🌱 季度EES候選</button><button type="button" id="ees-tab-pool" aria-pressed="false">📡 我的30檔</button></div>
   <section id="ees-discover-panel"><div id="ees-radar">正在計算早期發動訊號…</div></section>
   <section id="ees-pool-panel" hidden>
   <div class="section-title">📡 30檔觀察池</div>
@@ -2434,10 +2434,10 @@ function showEESRadar(history) {
     dates.map(d=>'<option value="'+esc(d)+'"'+(d===date?' selected':'')+'>'+esc(d)+'</option>').join('')+
     '</select><span style="font-size:13px;color:#64748b">僅用選定日期及以前的行情｜可回看2026-10-02</span></div>';
   const table=(items,showReason)=>'<div class="ees-list">'+items.map(x=>
-    '<details class="ees-mobile-row"><summary><span><strong>'+esc(x.name)+' '+esc(x.code)+'</strong><span class="ees-sub" style="display:block">'+esc(x.stage)+'</span></span><span style="text-align:right"><strong>EES '+x.score+'</strong><span class="ees-sub" style="display:block">覆蓋 '+x.covered+'/100</span></span></summary><div class="ees-details">5日漲幅：'+x.priceGain.toFixed(2)+'%｜'+esc(reason(x))+'<br>推薦狀態：'+(x.eligible?'早期候選，待季度審核':'未達早期候選門檻')+'</div></details>').join('')+'</div>';
+    '<details class="ees-mobile-row"><summary><span><strong>'+esc(x.name)+' '+esc(x.code)+'</strong><span class="ees-sub" style="display:block">'+esc(x.stage)+'</span></span><span style="text-align:right"><strong>EES '+x.score+'</strong><span class="ees-sub" style="display:block">覆蓋 '+x.covered+'/100</span></span></summary><div class="ees-details">5日漲幅：'+x.priceGain.toFixed(2)+'%｜'+esc(reason(x))+'<br>季度評估：'+(x.eligible?'符合早期條件，僅供下一季名單審核':'未達早期候選門檻')+'</div></details>').join('')+'</div>';
   el.innerHTML=header+
     '<p style="font-size:13px;color:#64748b">評估日：'+esc(date)+'｜本次資料涵蓋 '+all.length+' 檔（非全市場）｜早期候選 '+eligible.length+' 檔</p>'+
-    '<h3 style="margin:16px 0 8px">🌱 早期候選榜</h3>'+
+    '<h3 style="margin:16px 0 8px">🌱 EES 候選觀察（季度名單不變）</h3>'+
     (eligible.length?table(eligible,false):'<p>當日沒有符合門檻的早期發動標的；不強制湊滿三檔。</p>')+
     '<h3 style="margin:20px 0 8px">🔎 全部股票觀察榜</h3>'+
     '<p style="font-size:13px;color:#64748b">僅列出目前資料庫可計算的股票，尚非全市場掃描；包括已發動、突破確認與未達門檻者；排名不等於買進建議。</p>'+
