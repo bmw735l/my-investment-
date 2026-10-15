@@ -322,6 +322,10 @@ h1 {
 @media(max-width:760px){.walk-summary-list{grid-template-columns:1fr}.walk-plan{padding:14px}.stock-head{gap:12px;flex-wrap:wrap}.card{padding:18px}.walk-badge{margin-left:0}}
 
 </style>
+
+<style>
+.ees-tabs{display:flex;gap:8px;margin:12px 0}.ees-tabs button{flex:1;padding:12px 6px;border:1px solid #cbd5e1;border-radius:10px;background:#f1f5f9;font-weight:700;color:#334155}.ees-tabs button[aria-pressed="true"]{background:#dbeafe;border-color:#60a5fa;color:#1e40af}#ees-pool-panel[hidden],#ees-discover-panel[hidden]{display:none!important}.ees-mobile-row{padding:12px 0;border-bottom:1px solid #e2e8f0}.ees-mobile-row summary{cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px}.ees-mobile-row .ees-sub{font-size:13px;color:#64748b;margin-top:5px}.ees-mobile-row .ees-details{font-size:13px;line-height:1.7;padding:10px 0;color:#475569}.ees-list{max-width:100%}#ees-radar select{max-width:100%}
+</style>
 </head>
 
 <body>
@@ -382,7 +386,12 @@ h1 {
   </div>
 </div>
 
-<div class="card">
+<div class="card" id="ees-pool-hub">
+  <div class="section-title">🌱 EES × 30檔觀察池</div>
+  <p style="color:#64748b;font-size:14px">EES 搜尋早期發動候選，再推薦納入30檔；推薦不自動更換季度名單。</p>
+  <div class="ees-tabs" role="group" aria-label="切換EES與觀察池"><button type="button" id="ees-tab-discover" aria-pressed="true">🌱 EES 新發現</button><button type="button" id="ees-tab-pool" aria-pressed="false">📡 我的30檔</button></div>
+  <section id="ees-discover-panel"><div id="ees-radar">正在計算早期發動訊號…</div></section>
+  <section id="ees-pool-panel" hidden>
   <div class="section-title">📡 30檔觀察池</div>
   <p style="margin-top:-6px;color:#64748b;">先找變化，再等價格確認。第一版以30檔動態雷達驗證「提早發現」。</p>
   <p class="walk-footnote">依走圖條件分類；情報分數仍沿用原規則。進入口袋名單，不等於立即買進。</p>
@@ -399,6 +408,7 @@ h1 {
   <div id="secondary-watchlist">
     <p>正在載入第二層雷達...</p>
   </div>
+  </section>
 </div>
 
 <div class="card">
@@ -432,11 +442,7 @@ h1 {
   <p>正在分析 10 檔情報觀察池...</p>
 </div>
 
-<div class="card">
-  <div class="section-title">🌱 EES 早期發動雷達｜研究版</div>
-  <p style="color:#64748b;font-size:14px">選趨勢、找萌芽；分數是訊號強度，不是上漲機率。僅用評估日及以前的資料，不回頭偷看未來。</p>
-  <div id="ees-radar">正在計算早期發動訊號…</div>
-</div>
+
 
 <div class="card">
   <div class="section-title">🏆 PK 紀錄</div>
@@ -2427,16 +2433,14 @@ function showEESRadar(history) {
     '<select id="ees-date" style="padding:7px;border:1px solid #cbd5e1;border-radius:6px">'+
     dates.map(d=>'<option value="'+esc(d)+'"'+(d===date?' selected':'')+'>'+esc(d)+'</option>').join('')+
     '</select><span style="font-size:13px;color:#64748b">僅用選定日期及以前的行情｜可回看2026-10-02</span></div>';
-  const table=(items,showReason)=>'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;min-width:650px;text-align:center">'+
-    '<thead><tr style="background:#f7f9fc"><th>股票</th><th>EES實得/100</th><th>資料覆蓋</th><th>階段</th><th>5日漲幅</th>'+(showReason?'<th>判定原因</th>':'')+'</tr></thead><tbody>'+
-    items.map(x=>'<tr style="border-top:1px solid #e2e8f0"><td>'+esc(x.name)+' '+esc(x.code)+'</td><td><strong>'+x.score+'</strong></td><td>'+x.covered+'/100</td><td>'+esc(x.stage)+'</td><td>'+x.priceGain.toFixed(2)+'%</td>'+(showReason?'<td>'+esc(reason(x))+'</td>':'')+'</tr>').join('')+
-    '</tbody></table></div>';
+  const table=(items,showReason)=>'<div class="ees-list">'+items.map(x=>
+    '<details class="ees-mobile-row"><summary><span><strong>'+esc(x.name)+' '+esc(x.code)+'</strong><span class="ees-sub" style="display:block">'+esc(x.stage)+'</span></span><span style="text-align:right"><strong>EES '+x.score+'</strong><span class="ees-sub" style="display:block">覆蓋 '+x.covered+'/100</span></span></summary><div class="ees-details">5日漲幅：'+x.priceGain.toFixed(2)+'%｜'+esc(reason(x))+'<br>推薦狀態：'+(x.eligible?'早期候選，待季度審核':'未達早期候選門檻')+'</div></details>').join('')+'</div>';
   el.innerHTML=header+
-    '<p style="font-size:13px;color:#64748b">評估日：'+esc(date)+'｜評估 '+all.length+' 檔｜早期候選 '+eligible.length+' 檔</p>'+
+    '<p style="font-size:13px;color:#64748b">評估日：'+esc(date)+'｜本次資料涵蓋 '+all.length+' 檔（非全市場）｜早期候選 '+eligible.length+' 檔</p>'+
     '<h3 style="margin:16px 0 8px">🌱 早期候選榜</h3>'+
     (eligible.length?table(eligible,false):'<p>當日沒有符合門檻的早期發動標的；不強制湊滿三檔。</p>')+
     '<h3 style="margin:20px 0 8px">🔎 全部股票觀察榜</h3>'+
-    '<p style="font-size:13px;color:#64748b">完整列出已可計算的股票，包括已發動、突破確認與未達門檻者；排名不等於買進建議。</p>'+
+    '<p style="font-size:13px;color:#64748b">僅列出目前資料庫可計算的股票，尚非全市場掃描；包括已發動、突破確認與未達門檻者；排名不等於買進建議。</p>'+
     (all.length?table(all,true):'<p>資料不足，尚無可評估標的。</p>')+
     '<details style="margin-top:12px"><summary>查看分數規則與資料限制</summary><p>價格25、成交量20、相對強弱20、法人籌碼20、同族群15。缺資料項目不計分、不補分，也不將部分分數換算為100；資料覆蓋低於75/100不列候選。歷史回看按指定日期重新計算，並非當日已儲存的事前預測紀錄；回看日期之後的報酬不參與計分。部分同族群缺少可比樣本。</p></details>';
   el.querySelector("#ees-date").addEventListener("change",()=>showEESRadar(history));
@@ -2531,6 +2535,15 @@ async function renderV4MarketOverview(){
   }
 }
 renderV4MarketOverview();
+</script>
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+ const a=document.getElementById('ees-tab-discover'),b=document.getElementById('ees-tab-pool');
+ const p=document.getElementById('ees-discover-panel'),q=document.getElementById('ees-pool-panel');
+ if(!a||!b||!p||!q)return;
+ function select(pool){p.hidden=pool;q.hidden=!pool;a.setAttribute('aria-pressed',String(!pool));b.setAttribute('aria-pressed',String(pool));}
+ a.addEventListener('click',()=>select(false));b.addEventListener('click',()=>select(true));select(false);
+});
 </script>
 </body>
 </html>
