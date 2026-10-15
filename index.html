@@ -454,16 +454,12 @@ h1 {
   </div>
 </div> 
   
-<div class="card">
-  <div class="section-title">📒 我的交易紀錄</div>
-
-  <div style="display:flex;justify-content:flex-end;margin:8px 0 12px;">
-    <button type="button" id="clear-trade-records" style="padding:8px 14px;border:1px solid #ddd;border-radius:8px;background:#fff;cursor:pointer;">清空交易紀錄</button>
-  </div>
-  <div id="trade-records">
-    <p>目前還沒有交易紀錄。</p>
-  </div>
-</div>  
+<div class="card" id="broker-main-force">
+  <div class="section-title">🏦 關鍵分點 × 主力10日｜30檔觀察池</div>
+  <p class="walk-footnote">當季30檔固定觀察。主力10日與關鍵分點須有可核對的獨立來源；不以三大法人買賣超替代。</p>
+  <div id="broker-force-list">正在整理30檔名單…</div>
+  <details style="margin-top:12px"><summary>資料定義與限制</summary><p>分點不等於特定法人或大戶。資料未接入時顯示待接入，不推測、不填零。季度內不因每日籌碼變動而更換30檔。</p></details>
+</div>
 <div class="footer">
 我的投資情報站 V1
 </div>
@@ -1948,6 +1944,21 @@ function showAttentionSignals(stockData) {
       messages.join("");
   }
 }
+  async function showBrokerMainForce() {
+    const el=document.getElementById("broker-force-list");if(!el)return;
+    const entries=Object.entries(secondaryWatchlistConfig);
+    let dataset=null;
+    try {const res=await fetch("broker-force.json?v="+Date.now(),{cache:"no-store"});if(res.ok)dataset=await res.json();}catch(e){console.info("Broker dataset unavailable");}
+    const esc=x=>String(x??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
+    const valid=dataset?.stocks&&typeof dataset.stocks==="object";
+    el.innerHTML='<p style="font-size:13px;color:#64748b">觀察 '+entries.length+' 檔｜資料日期：'+esc(dataset?.trade_date||"待接入")+'</p><div class="ees-list">'+entries.map(([code,cfg])=>{
+      const x=valid?dataset.stocks[code]:null;
+      const flow=x&&Number.isFinite(x.main_force_10d_net)&&x.main_force_10d_source?x.main_force_10d_net.toLocaleString("zh-TW")+' 股':'待接入';
+      const branches=x&&Array.isArray(x.key_branches)&&x.key_branches.length&&x.branch_source?x.key_branches.map(b=>esc(b.name||b.branch||"未命名分點")).join("、"):'待接入';
+      return '<details class="ees-mobile-row"><summary><span><strong>'+esc(cfg.name)+' '+esc(code)+'</strong><span class="ees-sub" style="display:block">'+esc(cfg.group)+'</span></span><span style="text-align:right"><strong>10日 '+esc(flow)+'</strong><span class="ees-sub" style="display:block">分點 '+(branches==='待接入'?'待接入':'已取得')+'</span></span></summary><div class="ees-details">主力10日淨買賣：'+esc(flow)+'<br>關鍵分點：'+branches+'<br>來源：'+esc(x?.main_force_10d_source||"待接入")+'／'+esc(x?.branch_source||"待接入")+'</div></details>';
+    }).join('')+'</div>';
+  }
+  document.addEventListener("DOMContentLoaded",showBrokerMainForce);
   function setupClearTradeRecords() {
     const button = document.getElementById("clear-trade-records");
     if (!button || button.dataset.ready === "1") return;
