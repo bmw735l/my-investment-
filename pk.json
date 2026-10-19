@@ -1,6 +1,6 @@
 {
   "version": 3,
-  "updated": "2026-10-08 第五戰正式選股",
+  "updated": "2026-10-19 第六戰PK",
   "technical_snapshot_date": "2026-10-06 收盤",
   "technical_cards": [
     {
@@ -187,6 +187,35 @@
       },
       "benchmark_label": "EES系統",
       "ees_snapshot_date": "2026-10-08"
+    },
+    {
+      "round": 6,
+      "status": "open",
+      "signal_date": "2026-10-19",
+      "start_date": "2026-10-20",
+      "end_date": "2026-10-23",
+      "start_price_date": "2026-10-19",
+      "user": {
+        "code": "8358",
+        "stock": "金居",
+        "start_price": 484,
+        "reason": "處置股，這次來點不一樣的"
+      },
+      "partner": {
+        "code": "2313",
+        "stock": "華通",
+        "start_price": 248,
+        "reason": "資金支持的突破後整理"
+      },
+      "benchmark": {
+        "code": "3034",
+        "stock": "聯詠",
+        "start_price": 585,
+        "reason": "EES 10/16快照試攻，10/19官方收盤價校正"
+      },
+      "benchmark_label": "EES系統",
+      "ees_snapshot_date": "2026-10-16",
+      "notes": "聯詠10/19證交所官方收盤585，校正先前戰報578；金居處置狀態待官方核實；原聯電2303僅為改選歷史。"
     }
   ]
 }
