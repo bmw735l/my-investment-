@@ -358,6 +358,16 @@ h1 {
 </div>
 
 
+<div class="card" id="cross-market-risk">
+  <div class="section-title">🚦 股匯同步警戒｜三訊號交叉驗證</div>
+  <div id="cross-market-risk-content" aria-live="polite">正在核對最近已公布的資料…</div>
+  <p class="walk-footnote">只有外資明顯賣超、台幣連續貶值、費半轉弱三項均有可核對日期與來源，才顯示三重警戒；未公布或缺漏資料不視為成立。</p>
+</div>
+<div class="card" id="sharp-drop-diagnosis">
+  <div class="section-title">📉 突然下跌診斷｜走圖 × 資金</div>
+  <div id="sharp-drop-content" aria-live="polite">正在整理最新確認的指數跌幅…</div>
+  <p class="walk-footnote">大跌不等於趨勢結束。觀察是否放量跌破支撐、後續能否站回，以及主力10日與關鍵分點是否持續撤退；無資料時不判定洗盤或出貨。</p>
+</div>
 <div class="card focus">
   <div class="section-title">🧭 今日情報結論</div>
   <div id="walk-conclusion" aria-live="polite">正在整理走圖狀態與等待條件…</div>
@@ -2555,6 +2565,45 @@ document.addEventListener('DOMContentLoaded',function(){
  function select(pool){p.hidden=pool;q.hidden=!pool;a.setAttribute('aria-pressed',String(!pool));b.setAttribute('aria-pressed',String(pool));}
  a.addEventListener('click',()=>select(false));b.addEventListener('click',()=>select(true));select(false);
 });
+</script>
+<script>
+/* V4 confirmed-data risk assessment; no intraday or inferred FX close. */
+async function renderCrossMarketRisk(){
+ const el=document.getElementById("cross-market-risk-content"),drop=document.getElementById("sharp-drop-content");
+ if(!el||!drop)return;
+ const esc=v=>String(v??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
+ const fmt=(v,n=2)=>Number(v).toLocaleString("zh-TW",{maximumFractionDigits:n,minimumFractionDigits:n});
+ try{
+  const res=await fetch("market-overview.json?v="+Date.now(),{cache:"no-store"});
+  if(!res.ok)throw Error("overview unavailable");
+  const d=await res.json(),i=d.institutions||{},u=d.us||{},tw=d.twse||{},fx=d.fx||{};
+  const foreignOK=typeof i.foreign==="number"&&!!i.date;
+  const soxOK=typeof u.sox?.pct==="number"&&!!(u.sox.date||u.date);
+  // FX must contain two separately dated official closes and a source URL.
+  const fxOK=Number.isFinite(fx.close)&&Number.isFinite(fx.previous_close)&&!!fx.date&&!!fx.previous_date&&!!fx.source_url&&fx.date>fx.previous_date;
+  const foreign=foreignOK?i.foreign<=-10000000000:null; // -100 億元 threshold
+  const sox=soxOK?u.sox.pct<=-1:null;
+  const weakFX=fxOK?fx.close>fx.previous_close:null; // USD/TWD rises = TWD depreciates
+  const all=foreign===true&&sox===true&&weakFX===true;
+  const state=v=>v===null?"待核實":v?"警訊成立":"未成立";
+  const fxSource=fxOK?'<a href="'+esc(fx.source_url)+'" target="_blank" rel="noopener noreferrer">匯率來源</a>':'匯率來源尚未接入';
+  el.innerHTML='<p style="font-weight:700;color:'+(all?'#b91c1c':'#475569')+'">'+(all?'⚠️ 三項警訊同時成立：短線高風險':'尚未確認三項警訊同時成立；不發布三重警報')+'</p>'+
+  '<div style="line-height:1.9;font-size:14px">'+
+  '外資：'+(foreignOK?fmt(i.foreign/1e8)+' 億元（'+esc(i.date)+'）':'資料不足')+'｜'+state(foreign)+'<br>'+
+  '新台幣：'+(fxOK?'美元兌台幣 '+fmt(fx.previous_close,3)+' → '+fmt(fx.close,3)+'（'+esc(fx.previous_date)+' → '+esc(fx.date)+'）':'缺少連續兩個已確認的正式收盤價')+'｜'+state(weakFX)+'<br>'+
+  '費半：'+(soxOK?fmt(u.sox.close)+' 點，'+fmt(u.sox.pct)+'%（美東 '+esc(u.sox.date||u.date)+'）':'資料不足')+'｜'+state(sox)+'</div>'+
+  '<small>外資：證交所公布統計（資料日 '+esc(i.date||"待更新")+'）；費半：美股已確認收盤（'+esc(u.sox?.date||u.date||"待更新")+'）；'+fxSource+'。判定門檻：外資賣超至少100億元、費半跌至少1%、台幣相對前一正式收盤貶值。</small>'+
+  (all?'<p><strong>短線判斷：</strong>留意台積電、0050、AI供應鏈與高價電子股補跌；等待資金與支撐確認，不因跌深直接判定落底。</p>':'');
+  const twOK=Number.isFinite(tw.pct)&&!!tw.date;
+  const sharp=twOK&&tw.pct<=-2;
+  drop.innerHTML=twOK?'<p><strong>最近確認台股收盤：</strong>'+esc(tw.date)+'，'+fmt(tw.close)+' 點（'+(tw.pct>0?'+':'')+fmt(tw.pct)+'%）</p>'+
+   '<p>'+(sharp?'⚠️ 單日跌幅達2%，啟動急跌檢查；尚不能直接判斷洗盤或反轉。':'未達單日跌幅2%的急跌觀察門檻。')+'</p>'+
+   '<div style="line-height:1.9">① <strong>正常回檔：</strong>量縮、支撐未破，且10日主力未持續撤退<br>② <strong>等待確認：</strong>跌破短期支撐，觀察後續2～3個交易日能否站回<br>③ <strong>結構轉弱：</strong>放量跌破重要支撐，且主力10日與關鍵分點同步偏賣</div>'+
+   '<small>目前缺乏完整支撐、量能、主力及分點資料，以上為檢查條件，非已確認的個股結論。</small>':
+   '<p>台股已確認收盤資料不足，暫不判定急跌。</p>';
+ }catch(e){el.textContent="市場資料尚未核實完整，不發布三重警報。";drop.textContent="收盤資料尚未取得，暫不判定急跌。";}
+}
+renderCrossMarketRisk();
 </script>
 </body>
 </html>
