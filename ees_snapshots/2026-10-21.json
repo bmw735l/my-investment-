@@ -1,0 +1,1308 @@
+{
+  "schema_version": 1,
+  "model": "EES-v1-25-20-20-20-15",
+  "trade_date": "2026-10-21",
+  "generated_at": "2026-10-21T14:07:17.768Z",
+  "provenance": "first-run snapshot only; NOT a historical prediction; computed from history as available at capture time",
+  "selection_rule": "covered>=75 and score>=65 and stage is sprout or trial",
+  "count": 27,
+  "eligible_count": 2,
+  "stocks": [
+    {
+      "code": "2317",
+      "name": "鴻海",
+      "date": "2026-10-21",
+      "score": 71,
+      "covered": 85,
+      "stage": "萌芽／沉澱",
+      "eligible": true,
+      "parts": [
+        {
+          "name": "價格結構",
+          "score": 11,
+          "max": 25,
+          "detail": "5/10/15日趨勢、區間位置及過熱扣分",
+          "available": true
+        },
+        {
+          "name": "成交量",
+          "score": 20,
+          "max": 20,
+          "detail": "當日／前5日量比 1.41",
+          "available": true
+        },
+        {
+          "name": "相對強弱",
+          "score": 20,
+          "max": 20,
+          "detail": "5日相對0050 7.17%",
+          "available": true
+        },
+        {
+          "name": "法人籌碼",
+          "score": 20,
+          "max": 20,
+          "detail": "外資＋投信近3日對比前3日",
+          "available": true
+        },
+        {
+          "name": "同族群動能",
+          "score": 0,
+          "max": 15,
+          "detail": "同族群可比樣本不足",
+          "available": false
+        }
+      ],
+      "priceGain": 2.8806584362139898,
+      "stretch": 2.33319688907081
+    },
+    {
+      "code": "3034",
+      "name": "聯詠",
+      "date": "2026-10-21",
+      "score": 67,
+      "covered": 85,
+      "stage": "試攻",
+      "eligible": true,
+      "parts": [
+        {
+          "name": "價格結構",
+          "score": 25,
+          "max": 25,
+          "detail": "5/10/15日趨勢、區間位置及過熱扣分",
+          "available": true
+        },
+        {
+          "name": "成交量",
+          "score": 14,
+          "max": 20,
+          "detail": "當日／前5日量比 1.02",
+          "available": true
+        },
+        {
+          "name": "相對強弱",
+          "score": 20,
+          "max": 20,
+          "detail": "5日相對0050 9.65%",
+          "available": true
+        },
+        {
+          "name": "法人籌碼",
+          "score": 8,
+          "max": 20,
+          "detail": "外資＋投信近3日對比前3日",
+          "available": true
+        },
+        {
+          "name": "同族群動能",
+          "score": 0,
+          "max": 15,
+          "detail": "同族群可比樣本不足",
+          "available": false
+        }
+      ],
+      "priceGain": 5.35714285714286,
+      "stretch": 5.7347670250896154
+    },
+    {
+      "code": "6213",
+      "name": "聯茂",
+      "date": "2026-10-21",
+      "score": 56,
+      "covered": 85,
+      "stage": "萌芽／沉澱",
+      "eligible": false,
+      "parts": [
+        {
+          "name": "價格結構",
+          "score": 16,
+          "max": 25,
+          "detail": "5/10/15日趨勢、區間位置及過熱扣分",
+          "available": true
+        },
+        {
+          "name": "成交量",
+          "score": 10,
+          "max": 20,
+          "detail": "當日／前5日量比 0.56",
+          "available": true
+        },
+        {
+          "name": "相對強弱",
+          "score": 10,
+          "max": 20,
+          "detail": "5日相對0050 0.44%",
+          "available": true
+        },
+        {
+          "name": "法人籌碼",
+          "score": 20,
+          "max": 20,
+          "detail": "外資＋投信近3日對比前3日",
+          "available": true
+        },
+        {
+          "name": "同族群動能",
+          "score": 0,
+          "max": 15,
+          "detail": "同族群可比樣本不足",
+          "available": false
+        }
+      ],
+      "priceGain": -3.855140186915884,
+      "stretch": 3.1716184029083605
+    },
+    {
+      "code": "3661",
+      "name": "世芯-KY",
+      "date": "2026-10-21",
+      "score": 52,
+      "covered": 85,
+      "stage": "萌芽／沉澱",
+      "eligible": false,
+      "parts": [
+        {
+          "name": "價格結構",
+          "score": 12,
+          "max": 25,
+          "detail": "5/10/15日趨勢、區間位置及過熱扣分",
+          "available": true
+        },
+        {
+          "name": "成交量",
+          "score": 10,
+          "max": 20,
+          "detail": "當日／前5日量比 0.71",
+          "available": true
+        },
+        {
+          "name": "相對強弱",
+          "score": 10,
+          "max": 20,
+          "detail": "5日相對0050 -1.55%",
+          "available": true
+        },
+        {
+          "name": "法人籌碼",
+          "score": 20,
+          "max": 20,
+          "detail": "外資＋投信近3日對比前3日",
+          "available": true
+        },
+        {
+          "name": "同族群動能",
+          "score": 0,
+          "max": 15,
+          "detail": "同族群可比樣本不足",
+          "available": false
+        }
+      ],
+      "priceGain": -5.837563451776651,
+      "stretch": -5.789740985271708
+    },
+    {
+      "code": "2330",
+      "name": "台積電",
+      "date": "2026-10-21",
+      "score": 49,
+      "covered": 100,
+      "stage": "萌芽／沉澱",
+      "eligible": false,
+      "parts": [
+        {
+          "name": "價格結構",
+          "score": 7,
+          "max": 25,
+          "detail": "5/10/15日趨勢、區間位置及過熱扣分",
+          "available": true
+        },
+        {
+          "name": "成交量",
+          "score": 10,
+          "max": 20,
+          "detail": "當日／前5日量比 0.75",
+          "available": true
+        },
+        {
+          "name": "相對強弱",
+          "score": 20,
+          "max": 20,
+          "detail": "5日相對0050 1.48%",
+          "available": true
+        },
+        {
+          "name": "法人籌碼",
+          "score": 12,
+          "max": 20,
+          "detail": "外資＋投信近3日對比前3日",
+          "available": true
+        },
+        {
+          "name": "同族群動能",
+          "score": 0,
+          "max": 15,
+          "detail": "同組其他 1 檔的五日動能",
+          "available": true
+        }
+      ],
+      "priceGain": -2.8112449799196804,
+      "stretch": -2.2617124394184174
+    },
+    {
+      "code": "3037",
+      "name": "欣興",
+      "date": "2026-10-21",
+      "score": 47,
+      "covered": 85,
+      "stage": "萌芽／沉澱",
+      "eligible": false,
+      "parts": [
+        {
+          "name": "價格結構",
+          "score": 11,
+          "max": 25,
+          "detail": "5/10/15日趨勢、區間位置及過熱扣分",
+          "available": true
+        },
+        {
+          "name": "成交量",
+          "score": 14,
+          "max": 20,
+          "detail": "當日／前5日量比 1.08",
+          "available": true
+        },
+        {
+          "name": "相對強弱",
+          "score": 10,
+          "max": 20,
+          "detail": "5日相對0050 -2.88%",
+          "available": true
+        },
+        {
+          "name": "法人籌碼",
+          "score": 12,
+          "max": 20,
+          "detail": "外資＋投信近3日對比前3日",
+          "available": true
+        },
+        {
+          "name": "同族群動能",
+          "score": 0,
+          "max": 15,
+          "detail": "同族群可比樣本不足",
+          "available": false
+        }
+      ],
+      "priceGain": -7.1729957805907185,
+      "stretch": -5.45767082079931
+    },
+    {
+      "code": "2408",
+      "name": "南亞科",
+      "date": "2026-10-21",
+      "score": 46,
+      "covered": 100,
+      "stage": "萌芽／沉澱",
+      "eligible": false,
+      "parts": [
+        {
+          "name": "價格結構",
+          "score": 7,
+          "max": 25,
+          "detail": "5/10/15日趨勢、區間位置及過熱扣分",
+          "available": true
+        },
+        {
+          "name": "成交量",
+          "score": 10,
+          "max": 20,
+          "detail": "當日／前5日量比 0.61",
+          "available": true
+        },
+        {
+          "name": "相對強弱",
+          "score": 10,
+          "max": 20,
+          "detail": "5日相對0050 -4.87%",
+          "available": true
+        },
+        {
+          "name": "法人籌碼",
+          "score": 12,
+          "max": 20,
+          "detail": "外資＋投信近3日對比前3日",
+          "available": true
+        },
+        {
+          "name": "同族群動能",
+          "score": 7,
+          "max": 15,
+          "detail": "同組其他 1 檔的五日動能",
+          "available": true
+        }
+      ],
+      "priceGain": -9.15712799167534,
+      "stretch": -7.5799280118568735
+    },
+    {
+      "code": "6278",
+      "name": "台表科",
+      "date": "2026-10-21",
+      "score": 46,
+      "covered": 85,
+      "stage": "已發動",
+      "eligible": false,
+      "parts": [
+        {
+          "name": "價格結構",
+          "score": 18,
+          "max": 25,
+          "detail": "5/10/15日趨勢、區間位置及過熱扣分",
+          "available": true
+        },
+        {
+          "name": "成交量",
+          "score": 10,
+          "max": 20,
+          "detail": "當日／前5日量比 0.63",
+          "available": true
+        },
+        {
+          "name": "相對強弱",
+          "score": 10,
+          "max": 20,
+          "detail": "5日相對0050 13.43%",
+          "available": true
+        },
+        {
+          "name": "法人籌碼",
+          "score": 8,
+          "max": 20,
+          "detail": "外資＋投信近3日對比前3日",
+          "available": true
+        },
+        {
+          "name": "同族群動能",
+          "score": 0,
+          "max": 15,
+          "detail": "同族群可比樣本不足",
+          "available": false
+        }
+      ],
+      "priceGain": 9.13793103448275,
+      "stretch": 12.2141464279383
+    },
+    {
+      "code": "2344",
+      "name": "華邦電",
+      "date": "2026-10-21",
+      "score": 45,
+      "covered": 100,
+      "stage": "萌芽／沉澱",
+      "eligible": false,
+      "parts": [
+        {
+          "name": "價格結構",
+          "score": 11,
+          "max": 25,
+          "detail": "5/10/15日趨勢、區間位置及過熱扣分",
+          "available": true
+        },
+        {
+          "name": "成交量",
+          "score": 14,
+          "max": 20,
+          "detail": "當日／前5日量比 0.88",
+          "available": true
+        },
+        {
+          "name": "相對強弱",
+          "score": 20,
+          "max": 20,
+          "detail": "5日相對0050 0.96%",
+          "available": true
+        },
+        {
+          "name": "法人籌碼",
+          "score": 0,
+          "max": 20,
+          "detail": "外資＋投信近3日對比前3日",
+          "available": true
+        },
+        {
+          "name": "同族群動能",
+          "score": 0,
+          "max": 15,
+          "detail": "同組其他 1 檔的五日動能",
+          "available": true
+        }
+      ],
+      "priceGain": -3.3333333333333326,
+      "stretch": -2.80316879951249
+    },
+    {
+      "code": "2308",
+      "name": "台達電",
+      "date": "2026-10-21",
+      "score": 43,
+      "covered": 85,
+      "stage": "萌芽／沉澱",
+      "eligible": false,
+      "parts": [
+        {
+          "name": "價格結構",
+          "score": 7,
+          "max": 25,
+          "detail": "5/10/15日趨勢、區間位置及過熱扣分",
+          "available": true
+        },
+        {
+          "name": "成交量",
+          "score": 14,
+          "max": 20,
+          "detail": "當日／前5日量比 0.94",
+          "available": true
+        },
+        {
+          "name": "相對強弱",
+          "score": 10,
+          "max": 20,
+          "detail": "5日相對0050 -4.67%",
+          "available": true
+        },
+        {
+          "name": "法人籌碼",
+          "score": 12,
+          "max": 20,
+          "detail": "外資＋投信近3日對比前3日",
+          "available": true
+        },
+        {
+          "name": "同族群動能",
+          "score": 0,
+          "max": 15,
+          "detail": "同族群可比樣本不足",
+          "available": false
+        }
+      ],
+      "priceGain": -8.963585434173671,
+      "stretch": -7.4074074074074066
+    },
+    {
+      "code": "3443",
+      "name": "創意",
+      "date": "2026-10-21",
+      "score": 43,
+      "covered": 85,
+      "stage": "萌芽／沉澱",
+      "eligible": false,
+      "parts": [
+        {
+          "name": "價格結構",
+          "score": 11,
+          "max": 25,
+          "detail": "5/10/15日趨勢、區間位置及過熱扣分",
+          "available": true
+        },
+        {
+          "name": "成交量",
+          "score": 14,
+          "max": 20,
+          "detail": "當日／前5日量比 1.15",
+          "available": true
+        },
+        {
+          "name": "相對強弱",
+          "score": 10,
+          "max": 20,
+          "detail": "5日相對0050 1.32%",
+          "available": true
+        },
+        {
+          "name": "法人籌碼",
+          "score": 8,
+          "max": 20,
+          "detail": "外資＋投信近3日對比前3日",
+          "available": true
+        },
+        {
+          "name": "同族群動能",
+          "score": 0,
+          "max": 15,
+          "detail": "同族群可比樣本不足",
+          "available": false
+        }
+      ],
+      "priceGain": -2.9714978775015166,
+      "stretch": 0.01875351628430888
+    },
+    {
+      "code": "2357",
+      "name": "華碩",
+      "date": "2026-10-21",
+      "score": 42,
+      "covered": 85,
+      "stage": "萌芽／沉澱",
+      "eligible": false,
+      "parts": [
+        {
+          "name": "價格結構",
+          "score": 12,
+          "max": 25,
+          "detail": "5/10/15日趨勢、區間位置及過熱扣分",
+          "available": true
+        },
+        {
+          "name": "成交量",
+          "score": 10,
+          "max": 20,
+          "detail": "當日／前5日量比 0.62",
+          "available": true
+        },
+        {
+          "name": "相對強弱",
+          "score": 20,
+          "max": 20,
+          "detail": "5日相對0050 3.48%",
+          "available": true
+        },
+        {
+          "name": "法人籌碼",
+          "score": 0,
+          "max": 20,
+          "detail": "外資＋投信近3日對比前3日",
+          "available": true
+        },
+        {
+          "name": "同族群動能",
+          "score": 0,
+          "max": 15,
+          "detail": "同族群可比樣本不足",
+          "available": false
+        }
+      ],
+      "priceGain": -0.8080808080808133,
+      "stretch": 0
+    },
+    {
+      "code": "3017",
+      "name": "奇鋐",
+      "date": "2026-10-21",
+      "score": 41,
+      "covered": 85,
+      "stage": "萌芽／沉澱",
+      "eligible": false,
+      "parts": [
+        {
+          "name": "價格結構",
+          "score": 4,
+          "max": 25,
+          "detail": "5/10/15日趨勢、區間位置及過熱扣分",
+          "available": true
+        },
+        {
+          "name": "成交量",
+          "score": 5,
+          "max": 20,
+          "detail": "當日／前5日量比 1.29",
+          "available": true
+        },
+        {
+          "name": "相對強弱",
+          "score": 20,
+          "max": 20,
+          "detail": "5日相對0050 1.88%",
+          "available": true
+        },
+        {
+          "name": "法人籌碼",
+          "score": 12,
+          "max": 20,
+          "detail": "外資＋投信近3日對比前3日",
+          "available": true
+        },
+        {
+          "name": "同族群動能",
+          "score": 0,
+          "max": 15,
+          "detail": "同族群可比樣本不足",
+          "available": false
+        }
+      ],
+      "priceGain": -2.413273001508298,
+      "stretch": -2.6921341555121048
+    },
+    {
+      "code": "3189",
+      "name": "景碩",
+      "date": "2026-10-21",
+      "score": 41,
+      "covered": 85,
+      "stage": "萌芽／沉澱",
+      "eligible": false,
+      "parts": [
+        {
+          "name": "價格結構",
+          "score": 11,
+          "max": 25,
+          "detail": "5/10/15日趨勢、區間位置及過熱扣分",
+          "available": true
+        },
+        {
+          "name": "成交量",
+          "score": 20,
+          "max": 20,
+          "detail": "當日／前5日量比 1.56",
+          "available": true
+        },
+        {
+          "name": "相對強弱",
+          "score": 10,
+          "max": 20,
+          "detail": "5日相對0050 0.48%",
+          "available": true
+        },
+        {
+          "name": "法人籌碼",
+          "score": 0,
+          "max": 20,
+          "detail": "外資＋投信近3日對比前3日",
+          "available": true
+        },
+        {
+          "name": "同族群動能",
+          "score": 0,
+          "max": 15,
+          "detail": "同族群可比樣本不足",
+          "available": false
+        }
+      ],
+      "priceGain": -3.809523809523807,
+      "stretch": -1.3768186700517493
+    },
+    {
+      "code": "2383",
+      "name": "台光電",
+      "date": "2026-10-21",
+      "score": 38,
+      "covered": 85,
+      "stage": "萌芽／沉澱",
+      "eligible": false,
+      "parts": [
+        {
+          "name": "價格結構",
+          "score": 12,
+          "max": 25,
+          "detail": "5/10/15日趨勢、區間位置及過熱扣分",
+          "available": true
+        },
+        {
+          "name": "成交量",
+          "score": 14,
+          "max": 20,
+          "detail": "當日／前5日量比 0.93",
+          "available": true
+        },
+        {
+          "name": "相對強弱",
+          "score": 0,
+          "max": 20,
+          "detail": "5日相對0050 -5.31%",
+          "available": true
+        },
+        {
+          "name": "法人籌碼",
+          "score": 12,
+          "max": 20,
+          "detail": "外資＋投信近3日對比前3日",
+          "available": true
+        },
+        {
+          "name": "同族群動能",
+          "score": 0,
+          "max": 15,
+          "detail": "同族群可比樣本不足",
+          "available": false
+        }
+      ],
+      "priceGain": -9.601449275362317,
+      "stretch": -8.457163823151713
+    },
+    {
+      "code": "2059",
+      "name": "川湖",
+      "date": "2026-10-21",
+      "score": 37,
+      "covered": 85,
+      "stage": "萌芽／沉澱",
+      "eligible": false,
+      "parts": [
+        {
+          "name": "價格結構",
+          "score": 0,
+          "max": 25,
+          "detail": "5/10/15日趨勢、區間位置及過熱扣分",
+          "available": true
+        },
+        {
+          "name": "成交量",
+          "score": 5,
+          "max": 20,
+          "detail": "當日／前5日量比 1.07",
+          "available": true
+        },
+        {
+          "name": "相對強弱",
+          "score": 20,
+          "max": 20,
+          "detail": "5日相對0050 5.04%",
+          "available": true
+        },
+        {
+          "name": "法人籌碼",
+          "score": 12,
+          "max": 20,
+          "detail": "外資＋投信近3日對比前3日",
+          "available": true
+        },
+        {
+          "name": "同族群動能",
+          "score": 0,
+          "max": 15,
+          "detail": "同族群可比樣本不足",
+          "available": false
+        }
+      ],
+      "priceGain": 0.7496251874062887,
+      "stretch": -1.969365426695846
+    },
+    {
+      "code": "2303",
+      "name": "聯電",
+      "date": "2026-10-21",
+      "score": 36,
+      "covered": 100,
+      "stage": "萌芽／沉澱",
+      "eligible": false,
+      "parts": [
+        {
+          "name": "價格結構",
+          "score": 7,
+          "max": 25,
+          "detail": "5/10/15日趨勢、區間位置及過熱扣分",
+          "available": true
+        },
+        {
+          "name": "成交量",
+          "score": 10,
+          "max": 20,
+          "detail": "當日／前5日量比 0.56",
+          "available": true
+        },
+        {
+          "name": "相對強弱",
+          "score": 0,
+          "max": 20,
+          "detail": "5日相對0050 -5.57%",
+          "available": true
+        },
+        {
+          "name": "法人籌碼",
+          "score": 12,
+          "max": 20,
+          "detail": "外資＋投信近3日對比前3日",
+          "available": true
+        },
+        {
+          "name": "同族群動能",
+          "score": 7,
+          "max": 15,
+          "detail": "同組其他 1 檔的五日動能",
+          "available": true
+        }
+      ],
+      "priceGain": -9.859154929577462,
+      "stretch": -7.111756168359951
+    },
+    {
+      "code": "6442",
+      "name": "光聖",
+      "date": "2026-10-21",
+      "score": 34,
+      "covered": 85,
+      "stage": "萌芽／沉澱",
+      "eligible": false,
+      "parts": [
+        {
+          "name": "價格結構",
+          "score": 12,
+          "max": 25,
+          "detail": "5/10/15日趨勢、區間位置及過熱扣分",
+          "available": true
+        },
+        {
+          "name": "成交量",
+          "score": 10,
+          "max": 20,
+          "detail": "當日／前5日量比 0.76",
+          "available": true
+        },
+        {
+          "name": "相對強弱",
+          "score": 0,
+          "max": 20,
+          "detail": "5日相對0050 -4.24%",
+          "available": true
+        },
+        {
+          "name": "法人籌碼",
+          "score": 12,
+          "max": 20,
+          "detail": "外資＋投信近3日對比前3日",
+          "available": true
+        },
+        {
+          "name": "同族群動能",
+          "score": 0,
+          "max": 15,
+          "detail": "同族群可比樣本不足",
+          "available": false
+        }
+      ],
+      "priceGain": -8.536585365853655,
+      "stretch": -6.774394033561215
+    },
+    {
+      "code": "8046",
+      "name": "南電",
+      "date": "2026-10-21",
+      "score": 33,
+      "covered": 85,
+      "stage": "萌芽／沉澱",
+      "eligible": false,
+      "parts": [
+        {
+          "name": "價格結構",
+          "score": 7,
+          "max": 25,
+          "detail": "5/10/15日趨勢、區間位置及過熱扣分",
+          "available": true
+        },
+        {
+          "name": "成交量",
+          "score": 14,
+          "max": 20,
+          "detail": "當日／前5日量比 0.84",
+          "available": true
+        },
+        {
+          "name": "相對強弱",
+          "score": 0,
+          "max": 20,
+          "detail": "5日相對0050 -2.00%",
+          "available": true
+        },
+        {
+          "name": "法人籌碼",
+          "score": 12,
+          "max": 20,
+          "detail": "外資＋投信近3日對比前3日",
+          "available": true
+        },
+        {
+          "name": "同族群動能",
+          "score": 0,
+          "max": 15,
+          "detail": "同族群可比樣本不足",
+          "available": false
+        }
+      ],
+      "priceGain": -6.2937062937062915,
+      "stretch": -4.217298070050035
+    },
+    {
+      "code": "0050",
+      "name": "元大台灣50",
+      "date": "2026-10-21",
+      "score": 29,
+      "covered": 85,
+      "stage": "萌芽／沉澱",
+      "eligible": false,
+      "parts": [
+        {
+          "name": "價格結構",
+          "score": 7,
+          "max": 25,
+          "detail": "5/10/15日趨勢、區間位置及過熱扣分",
+          "available": true
+        },
+        {
+          "name": "成交量",
+          "score": 10,
+          "max": 20,
+          "detail": "當日／前5日量比 0.45",
+          "available": true
+        },
+        {
+          "name": "相對強弱",
+          "score": 0,
+          "max": 20,
+          "detail": "5日相對0050 0.00%",
+          "available": true
+        },
+        {
+          "name": "法人籌碼",
+          "score": 12,
+          "max": 20,
+          "detail": "外資＋投信近3日對比前3日",
+          "available": true
+        },
+        {
+          "name": "同族群動能",
+          "score": 0,
+          "max": 15,
+          "detail": "同族群可比樣本不足",
+          "available": false
+        }
+      ],
+      "priceGain": -4.292035398230087,
+      "stretch": -2.7996225228059224
+    },
+    {
+      "code": "2301",
+      "name": "光寶科",
+      "date": "2026-10-21",
+      "score": 29,
+      "covered": 85,
+      "stage": "萌芽／沉澱",
+      "eligible": false,
+      "parts": [
+        {
+          "name": "價格結構",
+          "score": 7,
+          "max": 25,
+          "detail": "5/10/15日趨勢、區間位置及過熱扣分",
+          "available": true
+        },
+        {
+          "name": "成交量",
+          "score": 10,
+          "max": 20,
+          "detail": "當日／前5日量比 0.68",
+          "available": true
+        },
+        {
+          "name": "相對強弱",
+          "score": 0,
+          "max": 20,
+          "detail": "5日相對0050 -2.60%",
+          "available": true
+        },
+        {
+          "name": "法人籌碼",
+          "score": 12,
+          "max": 20,
+          "detail": "外資＋投信近3日對比前3日",
+          "available": true
+        },
+        {
+          "name": "同族群動能",
+          "score": 0,
+          "max": 15,
+          "detail": "同族群可比樣本不足",
+          "available": false
+        }
+      ],
+      "priceGain": -6.890459363957602,
+      "stretch": -4.753298391469363
+    },
+    {
+      "code": "3711",
+      "name": "日月光投控",
+      "date": "2026-10-21",
+      "score": 29,
+      "covered": 85,
+      "stage": "萌芽／沉澱",
+      "eligible": false,
+      "parts": [
+        {
+          "name": "價格結構",
+          "score": 7,
+          "max": 25,
+          "detail": "5/10/15日趨勢、區間位置及過熱扣分",
+          "available": true
+        },
+        {
+          "name": "成交量",
+          "score": 10,
+          "max": 20,
+          "detail": "當日／前5日量比 0.56",
+          "available": true
+        },
+        {
+          "name": "相對強弱",
+          "score": 0,
+          "max": 20,
+          "detail": "5日相對0050 -4.14%",
+          "available": true
+        },
+        {
+          "name": "法人籌碼",
+          "score": 12,
+          "max": 20,
+          "detail": "外資＋投信近3日對比前3日",
+          "available": true
+        },
+        {
+          "name": "同族群動能",
+          "score": 0,
+          "max": 15,
+          "detail": "同族群可比樣本不足",
+          "available": false
+        }
+      ],
+      "priceGain": -8.433734939759042,
+      "stretch": -3.4307496823379857
+    },
+    {
+      "code": "2454",
+      "name": "聯發科",
+      "date": "2026-10-21",
+      "score": 27,
+      "covered": 85,
+      "stage": "萌芽／沉澱",
+      "eligible": false,
+      "parts": [
+        {
+          "name": "價格結構",
+          "score": 0,
+          "max": 25,
+          "detail": "5/10/15日趨勢、區間位置及過熱扣分",
+          "available": true
+        },
+        {
+          "name": "成交量",
+          "score": 5,
+          "max": 20,
+          "detail": "當日／前5日量比 0.97",
+          "available": true
+        },
+        {
+          "name": "相對強弱",
+          "score": 10,
+          "max": 20,
+          "detail": "5日相對0050 -3.19%",
+          "available": true
+        },
+        {
+          "name": "法人籌碼",
+          "score": 12,
+          "max": 20,
+          "detail": "外資＋投信近3日對比前3日",
+          "available": true
+        },
+        {
+          "name": "同族群動能",
+          "score": 0,
+          "max": 15,
+          "detail": "同族群可比樣本不足",
+          "available": false
+        }
+      ],
+      "priceGain": -7.48603351955307,
+      "stretch": -6.037221970040852
+    },
+    {
+      "code": "3665",
+      "name": "貿聯-KY",
+      "date": "2026-10-21",
+      "score": 27,
+      "covered": 85,
+      "stage": "萌芽／沉澱",
+      "eligible": false,
+      "parts": [
+        {
+          "name": "價格結構",
+          "score": 7,
+          "max": 25,
+          "detail": "5/10/15日趨勢、區間位置及過熱扣分",
+          "available": true
+        },
+        {
+          "name": "成交量",
+          "score": 20,
+          "max": 20,
+          "detail": "當日／前5日量比 1.23",
+          "available": true
+        },
+        {
+          "name": "相對強弱",
+          "score": 0,
+          "max": 20,
+          "detail": "5日相對0050 -8.46%",
+          "available": true
+        },
+        {
+          "name": "法人籌碼",
+          "score": 0,
+          "max": 20,
+          "detail": "外資＋投信近3日對比前3日",
+          "available": true
+        },
+        {
+          "name": "同族群動能",
+          "score": 0,
+          "max": 15,
+          "detail": "同族群可比樣本不足",
+          "available": false
+        }
+      ],
+      "priceGain": -12.751677852348998,
+      "stretch": -8.899789768745626
+    },
+    {
+      "code": "2368",
+      "name": "金像電",
+      "date": "2026-10-21",
+      "score": 22,
+      "covered": 85,
+      "stage": "萌芽／沉澱",
+      "eligible": false,
+      "parts": [
+        {
+          "name": "價格結構",
+          "score": 12,
+          "max": 25,
+          "detail": "5/10/15日趨勢、區間位置及過熱扣分",
+          "available": true
+        },
+        {
+          "name": "成交量",
+          "score": 10,
+          "max": 20,
+          "detail": "當日／前5日量比 0.61",
+          "available": true
+        },
+        {
+          "name": "相對強弱",
+          "score": 0,
+          "max": 20,
+          "detail": "5日相對0050 -0.87%",
+          "available": true
+        },
+        {
+          "name": "法人籌碼",
+          "score": 0,
+          "max": 20,
+          "detail": "外資＋投信近3日對比前3日",
+          "available": true
+        },
+        {
+          "name": "同族群動能",
+          "score": 0,
+          "max": 15,
+          "detail": "同族群可比樣本不足",
+          "available": false
+        }
+      ],
+      "priceGain": -5.158730158730163,
+      "stretch": -2.528548123980423
+    },
+    {
+      "code": "2313",
+      "name": "華通",
+      "date": "2026-10-21",
+      "score": 19,
+      "covered": 85,
+      "stage": "萌芽／沉澱",
+      "eligible": false,
+      "parts": [
+        {
+          "name": "價格結構",
+          "score": 9,
+          "max": 25,
+          "detail": "5/10/15日趨勢、區間位置及過熱扣分",
+          "available": true
+        },
+        {
+          "name": "成交量",
+          "score": 0,
+          "max": 20,
+          "detail": "當日／前5日量比 1.93",
+          "available": true
+        },
+        {
+          "name": "相對強弱",
+          "score": 10,
+          "max": 20,
+          "detail": "5日相對0050 0.30%",
+          "available": true
+        },
+        {
+          "name": "法人籌碼",
+          "score": 0,
+          "max": 20,
+          "detail": "外資＋投信近3日對比前3日",
+          "available": true
+        },
+        {
+          "name": "同族群動能",
+          "score": 0,
+          "max": 15,
+          "detail": "同族群可比樣本不足",
+          "available": false
+        }
+      ],
+      "priceGain": -3.9920159680638667,
+      "stretch": -1.7565359477124232
+    },
+    {
+      "code": "3653",
+      "name": "健策",
+      "date": "2026-10-21",
+      "score": 17,
+      "covered": 85,
+      "stage": "萌芽／沉澱",
+      "eligible": false,
+      "parts": [
+        {
+          "name": "價格結構",
+          "score": 0,
+          "max": 25,
+          "detail": "5/10/15日趨勢、區間位置及過熱扣分",
+          "available": true
+        },
+        {
+          "name": "成交量",
+          "score": 5,
+          "max": 20,
+          "detail": "當日／前5日量比 0.95",
+          "available": true
+        },
+        {
+          "name": "相對強弱",
+          "score": 0,
+          "max": 20,
+          "detail": "5日相對0050 -3.28%",
+          "available": true
+        },
+        {
+          "name": "法人籌碼",
+          "score": 12,
+          "max": 20,
+          "detail": "外資＋投信近3日對比前3日",
+          "available": true
+        },
+        {
+          "name": "同族群動能",
+          "score": 0,
+          "max": 15,
+          "detail": "同族群可比樣本不足",
+          "available": false
+        }
+      ],
+      "priceGain": -7.567185289957568,
+      "stretch": -4.5009498757854765
+    }
+  ]
+}
