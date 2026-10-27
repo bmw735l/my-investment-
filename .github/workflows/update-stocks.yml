@@ -3,9 +3,8 @@ name: Update Stock Data
 on:
   workflow_dispatch:
   schedule:
-    # 台北時間 16:30 及 19:00，交易日收盤後更新（第二次作為補跑）
-    - cron: '30 8 * * 1-5'
-    - cron: '0 11 * * 1-5'
+    # 台北時間 20:00，交易日收盤後統一更新
+    - cron: '0 12 * * 1-5'
 
 permissions:
   contents: write
